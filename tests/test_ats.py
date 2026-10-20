@@ -1,4 +1,7 @@
-from app.ats import alias_pattern, find_skills, load_skills, score
+from app.ats import ROOT, alias_pattern, find_skills, latex_to_text, load_skills, score
+
+def test_mentored_counts_as_leadership():
+    assert "Leadership" in find_skills("mentored 50+ students", load_skills())
 
 
 def test_ml_does_not_match_inside_html():
@@ -22,3 +25,11 @@ def test_score_perfect_match():
     result = score("Python and SQL", "Need Python and SQL")
     assert result["percent"] == 100
     assert result["missing"] == []
+
+
+def test_leadership_found_in_resume():
+    resume_path = ROOT / "data" / "resume.tex"
+    resume_tex = resume_path.read_text(encoding="utf-8")
+    resume_text = latex_to_text(resume_tex)
+
+    assert "Leadership" in find_skills(resume_text, load_skills())
