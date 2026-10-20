@@ -38,9 +38,15 @@ def get_bullets(tex):
     return bullets
 
 
+def replace_bullet(tex, bullet, new_text):
+    """Return tex with one bullet's text replaced by new_text."""
+    return tex[:bullet["start"] + 1] + new_text + tex[bullet["end"] - 1:]
+
 if __name__ == "__main__":
     tex = RESUME.read_text(encoding="utf-8")
     bullets = get_bullets(tex)
     print(f"Found {len(bullets)} bullets\n")
     for i, b in enumerate(bullets, start=1):
         print(f"{i}. [{b['section']}] {b['text'][:80]}")
+
+
