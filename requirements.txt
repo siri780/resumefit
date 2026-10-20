@@ -1,0 +1,10 @@
+streamlit
+openai
+pydantic
+requests
+pandas
+scikit-learn
+rapidfuzz
+pdfplumber
+python-dotenv
+pytest
