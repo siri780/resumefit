@@ -1,0 +1,13 @@
+Data Scientist, New Grad (2027)
+We are looking for a Data Scientist to join our Product Analytics team.
+Responsibilities:
+- Design and analyze A/B tests and online experiments to measure product changes
+- Build predictive models and machine learning pipelines in Python and SQL
+- Develop dashboards in Tableau to track KPIs and communicate insights to cross-functional stakeholders
+- Apply causal inference and statistical modeling to large-scale data
+Qualifications:
+- MS in Statistics, Computer Science, Data Science or related field
+- Strong skills in Python (pandas, scikit-learn), SQL, and statistics
+- Experience with hypothesis testing, regression, and time series forecasting
+- Familiarity with Spark, AWS, or Docker is a plus
+- Experience with PyTorch or TensorFlow for deep learning is a plus

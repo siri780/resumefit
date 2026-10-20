@@ -1,0 +1,67 @@
+skill,aliases,category,case_sensitive
+Python,python|py,language,no
+R,R,language,yes
+SQL,sql|mysql|postgresql|postgres|t-sql|tsql,language,no
+Java,java,language,no
+C++,c++|cpp,language,no
+Scala,scala,language,no
+JavaScript,javascript|js|typescript,language,no
+Machine Learning,machine learning|ml,ml,no
+Deep Learning,deep learning|neural network|neural networks|cnn|cnns|rnn|lstm|transformer|transformers,ml,no
+NLP,nlp|natural language processing|text mining,ml,no
+LLMs,llm|llms|large language model|large language models|generative ai|genai|gpt,ml,no
+Computer Vision,computer vision|image classification|object detection,ml,no
+Statistical Modeling,statistical modeling|statistical modelling|statistical model|statistical models,stats,no
+Statistics,statistics|statistical analysis|statistical methods,stats,no
+Regression,regression|linear regression|logistic regression,stats,no
+Classification,classification|classifier|classifiers,stats,no
+Hypothesis Testing,hypothesis testing|hypothesis test|statistical testing|significance testing,stats,no
+A/B Testing,a/b testing|a/b test|a/b tests|ab testing|split testing,stats,no
+Experimentation,experimentation|experiments|experimental design|online experiments,stats,no
+Causal Inference,causal inference|causal analysis|causality|propensity score,stats,no
+Survival Analysis,survival analysis|time-to-event|cox model|cox regression,stats,no
+Time Series,time series|time-series|forecasting|arima,stats,no
+Bayesian,bayesian|bayes,stats,no
+Probability,probability|probabilistic,stats,no
+Linear Algebra,linear algebra,stats,no
+Optimization,optimization|optimisation,stats,no
+Econometrics,econometrics|econometric,stats,no
+Feature Engineering,feature engineering|feature selection,ml,no
+Data Visualization,data visualization|data visualisation|visualization|dashboards|dashboard,analytics,no
+Data Analysis,data analysis|data analytics|analytics|exploratory data analysis|eda,analytics,no
+Data Mining,data mining,analytics,no
+Predictive Modeling,predictive modeling|predictive modelling|predictive models|predictive analytics,ml,no
+Recommendation Systems,recommendation systems|recommender systems|recommendations,ml,no
+Model Deployment,model deployment|deploy models|deployed|mlops|production models,engineering,no
+ETL,etl|elt|data pipeline|data pipelines,engineering,no
+Data Warehousing,data warehouse|data warehousing|snowflake|redshift|bigquery,engineering,no
+Data Modeling,data modeling|data modelling|star schema,engineering,no
+Big Data,big data|large-scale data|large scale data,engineering,no
+Spark,spark|pyspark|apache spark,tools,no
+Hadoop,hadoop|hive|mapreduce,tools,no
+Airflow,airflow,tools,no
+pandas,pandas,library,no
+NumPy,numpy,library,no
+scikit-learn,scikit-learn|sklearn|scikit learn,library,no
+TensorFlow,tensorflow|keras,library,no
+PyTorch,pytorch|torch,library,no
+Matplotlib,matplotlib|seaborn|plotly,library,no
+tidyverse,tidyverse|dplyr|ggplot2|ggplot,library,no
+AWS,aws|amazon web services|s3|ec2|sagemaker|lambda,cloud,no
+GCP,gcp|google cloud,cloud,no
+Azure,azure,cloud,no
+Docker,docker|containers|containerization,tools,no
+Kubernetes,kubernetes|k8s,tools,no
+Git,git|github|version control,tools,no
+CI/CD,ci/cd|continuous integration|github actions,tools,no
+Linux,linux|unix|bash|shell scripting,tools,no
+REST APIs,rest api|rest apis|restful|api|apis,engineering,no
+Flask,flask,tools,no
+Streamlit,streamlit,tools,no
+Jupyter,jupyter|notebooks,tools,no
+Tableau,tableau,tools,no
+Power BI,power bi|powerbi,tools,no
+Excel,excel|spreadsheets,tools,no
+Healthcare,healthcare|health care|clinical|ehr|electronic health records|real-world data|real world evidence,domain,no
+KPIs,kpi|kpis|metrics|key performance indicators,analytics,no
+Stakeholder Communication,stakeholders|stakeholder|cross-functional|communicate|communication,soft,no
