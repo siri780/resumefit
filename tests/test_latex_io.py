@@ -1,4 +1,4 @@
-from app.latex_io import RESUME, get_bullets, read_braced, replace_bullet
+from app.latex_io import RESUME, apply_edits, get_bullets, read_braced, replace_bullet
 
 
 def test_read_braced_handles_nested_braces():
@@ -32,3 +32,14 @@ def test_replace_bullet_changes_only_that_bullet():
     for i in range(11):
         if i != 6:
             assert new_bullets[i]["text"] == bullets[i]["text"]
+
+
+def test_apply_edits_replaces_several_bullets():
+    tex = RESUME.read_text(encoding="utf-8")
+
+    updated = apply_edits(tex, {2: "FIRST", 8: "SECOND"})
+    bullets = get_bullets(updated)
+
+    assert bullets[2]["text"] == "FIRST"
+    assert bullets[8]["text"] == "SECOND"
+    assert len(bullets) == 11

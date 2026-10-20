@@ -42,11 +42,18 @@ def replace_bullet(tex, bullet, new_text):
     """Return tex with one bullet's text replaced by new_text."""
     return tex[:bullet["start"] + 1] + new_text + tex[bullet["end"] - 1:]
 
+
+def apply_edits(tex, edits):
+    """Replace multiple resume bullets without shifting later positions."""
+    bullets = get_bullets(tex)
+    for i in sorted(edits, reverse=True):
+        tex = replace_bullet(tex, bullets[i], edits[i])
+    return tex
+
+
 if __name__ == "__main__":
     tex = RESUME.read_text(encoding="utf-8")
     bullets = get_bullets(tex)
     print(f"Found {len(bullets)} bullets\n")
     for i, b in enumerate(bullets, start=1):
         print(f"{i}. [{b['section']}] {b['text'][:80]}")
-
-
