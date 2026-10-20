@@ -28,3 +28,11 @@ def test_blocks_unescaped_percent():
 def test_safe_rewording_passes():
     new = "Built automated SQL ETL pipelines, cutting manual reporting effort by 40\\%."
     assert check_bullet(ORIGINAL, new, RESUME_SKILLS, load_skills()) == []
+
+
+def test_blocks_removed_keyword():
+    original = "Conduct end-to-end statistical analysis of EHR cohorts."
+    new = "Analyzed EHR cohorts."
+    resume_skills = {"Statistics", "Healthcare"}
+    problems = check_bullet(original, new, resume_skills, load_skills())
+    assert any("Removed" in p for p in problems)

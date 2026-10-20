@@ -30,7 +30,7 @@ Feature Engineering,feature engineering|feature selection,ml,no
 Data Visualization,data visualization|data visualisation|visualization|dashboards|dashboard,analytics,no
 Data Analysis,data analysis|data analytics|analytics|exploratory data analysis|eda,analytics,no
 Data Mining,data mining,analytics,no
-Predictive Modeling,predictive modeling|predictive modelling|predictive models|predictive analytics,ml,no
+Predictive Modeling,predictive modeling|predictive modelling|predictive models|predictive model|predictive analytics,ml,no
 Recommendation Systems,recommendation systems|recommender systems|recommendations,ml,no
 Model Deployment,model deployment|deploy models|deployed|mlops|production models,engineering,no
 ETL,etl|elt|data pipeline|data pipelines,engineering,no

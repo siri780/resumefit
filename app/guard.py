@@ -44,9 +44,19 @@ def check_length(original, new, max_ratio=1.25):
     return []
 
 
+def check_keyword_loss(original, new, skills):
+    """The new bullet must keep every skill keyword the original had."""
+    lost = (find_skills(latex_to_text(original), skills)
+            - find_skills(latex_to_text(new), skills))
+    if lost:
+        return [f"Removed keyword(s): {', '.join(sorted(lost))}"]
+    return []
+
+
 def check_bullet(original, new, resume_skills, skills):
-    """Run all 4 checks. An empty list means the bullet is safe."""
+    """Run all 5 checks. An empty list means the bullet is safe."""
     return (check_numbers(original, new)
             + check_skills(new, resume_skills, skills)
+            + check_keyword_loss(original, new, skills)
             + check_latex(new)
             + check_length(original, new))
