@@ -1,3 +1,4 @@
+import sys
 import time
 from datetime import datetime
 
@@ -24,12 +25,16 @@ def run_once(cycle):
 
 
 if __name__ == "__main__":
-    send_telegram("👀 ResumeFit watcher started. Checking every 5 minutes.")
-    cycle = 0
-    while True:
-        try:
-            run_once(cycle)
-        except Exception as error:
-            print(f"Scan failed: {error}", flush=True)
-        cycle += 1
-        time.sleep(INTERVAL_SECONDS)
+    if "--once" in sys.argv:
+        minute = datetime.now(TIMEZONE).minute
+        run_once(0 if minute % 30 < 6 else 1)
+    else:
+        send_telegram("👀 ResumeFit watcher started. Checking every 5 minutes.")
+        cycle = 0
+        while True:
+            try:
+                run_once(cycle)
+            except Exception as error:
+                print(f"Scan failed: {error}", flush=True)
+            cycle += 1
+            time.sleep(INTERVAL_SECONDS)
