@@ -3,10 +3,11 @@ import subprocess
 
 import streamlit as st
 
-from app.applications import already_applied, save_application
+from app.applications import TRACKER, already_applied, save_application
 from app.ats import ROOT, find_skills, latex_to_text, load_skills, score
 from app.backup import backup
 from app.build_pdf import OUTPUT, build_pdf
+from app.drive import upload_to_drive
 from app.latex_io import apply_edits, get_bullets
 from app.pdf_check import check_pdf
 from app.tailor import load_approved, save_approved, tailor
@@ -180,5 +181,7 @@ if "result" in st.session_state:
                                           tailored["after"], link)
                 st.success(f"Saved to applications/{folder.name}")
                 ok, message = backup(f"Add {company} - {role}")
+                st.success(message) if ok else st.warning(message)
+                ok, message = upload_to_drive(TRACKER, folder)
                 st.success(message) if ok else st.warning(message)
             st.image(str(preview_image(pdf)))
