@@ -3,6 +3,7 @@ import subprocess
 
 import streamlit as st
 
+from app.applications import already_applied, save_application
 from app.ats import ROOT, find_skills, latex_to_text, load_skills, score
 from app.build_pdf import OUTPUT, build_pdf
 from app.latex_io import apply_edits, get_bullets
@@ -62,9 +63,16 @@ with st.sidebar:
         save_approved(approved)
 
 # ---------- Input ----------
-company = st.text_input("Company", placeholder="e.g. Pinterest")
+col_a, col_b = st.columns(2)
+company = col_a.text_input("Company", placeholder="e.g. Pinterest")
+role = col_b.text_input("Role", placeholder="e.g. Data Scientist")
+link = st.text_input("Job link (optional)", placeholder="https://...")
 jd = st.text_area("Job description", height=220,
                   placeholder="Paste the full job posting here...")
+
+if company.strip() and role.strip() and already_applied(company, role):
+    st.warning(f"⚠️ You already saved an application for "
+               f"{company} – {role}.")
 
 if st.button("Analyze match", type="primary", width="stretch"):
     if not jd.strip():
@@ -141,6 +149,7 @@ if "result" in st.session_state:
                 pdf = build_pdf(name, tex=new_tex)
                 st.session_state["tailored"] = {
                     "pdf": pdf,
+                    "tex": new_tex,
                     "after": after,
                     "checks": check_pdf(pdf, latex_to_text(new_tex)),
                 }
@@ -156,7 +165,17 @@ if "result" in st.session_state:
                     st.error(f"⚠️ {problem}")
             else:
                 st.success("✅ 1 page · details filled in · readable by ATS")
-            st.download_button("⬇️ Download tailored resume (PDF)",
+
+            b1, b2 = st.columns(2)
+            b1.download_button("⬇️ Download tailored resume (PDF)",
                                data=pdf.read_bytes(), file_name=pdf.name,
-                               mime="application/pdf", type="primary")
+                               mime="application/pdf", type="primary",
+                               width="stretch")
+            if b2.button("💾 Save application", width="stretch",
+                         disabled=not (company.strip() and role.strip())):
+                folder = save_application(company, role,
+                                          st.session_state["jd"],
+                                          tailored["tex"], pdf, result,
+                                          tailored["after"], link)
+                st.success(f"Saved to applications/{folder.name}")
             st.image(str(preview_image(pdf)))
