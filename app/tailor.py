@@ -94,3 +94,9 @@ if __name__ == "__main__":
         print("  WHY:", r["reason"])
         for p in r["problems"]:
             print("  !!", p)
+
+
+def save_approved(skills):
+    """Save approved skills to the file, one per line."""
+    text = "".join(f"{s}\n" for s in sorted(skills))
+    APPROVED_FILE.write_text(text, encoding="utf-8")
