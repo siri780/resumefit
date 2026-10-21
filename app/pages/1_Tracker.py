@@ -2,6 +2,7 @@ import pandas as pd
 import streamlit as st
 
 from app.applications import FIELDS, STATUSES, read_tracker, write_tracker
+from app.backup import backup
 from app.ui import CSS, card, hero
 
 st.set_page_config(page_title="Tracker · ResumeFit", page_icon="📋",
@@ -55,3 +56,5 @@ if st.button("💾 Save changes", type="primary"):
     df.update(edited)
     write_tracker(df.to_dict("records"))
     st.success("Tracker updated.")
+    ok, message = backup("Update tracker")
+    st.success(message) if ok else st.warning(message)
