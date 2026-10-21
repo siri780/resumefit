@@ -6,6 +6,7 @@ import streamlit as st
 from app.ats import ROOT, find_skills, latex_to_text, load_skills, score
 from app.build_pdf import OUTPUT, build_pdf
 from app.latex_io import apply_edits, get_bullets
+from app.pdf_check import check_pdf
 from app.tailor import load_approved, save_approved, tailor
 from app.ui import CSS, card, chips, hero, score_color, score_ring
 
@@ -137,9 +138,11 @@ if "result" in st.session_state:
                 after = score(latex_to_text(new_tex),
                               st.session_state["jd"], skills)
                 name = f"Shirisha_Gajendra_{safe_name(company)}"
+                pdf = build_pdf(name, tex=new_tex)
                 st.session_state["tailored"] = {
-                    "pdf": build_pdf(name, tex=new_tex),
+                    "pdf": pdf,
                     "after": after,
+                    "checks": check_pdf(pdf, latex_to_text(new_tex)),
                 }
 
         tailored = st.session_state.get("tailored")
@@ -148,6 +151,11 @@ if "result" in st.session_state:
             st.metric("ATS score after tailoring", f"{after_pct}%",
                       delta=f"{after_pct - pct} points")
             pdf = tailored["pdf"]
+            if tailored["checks"]:
+                for problem in tailored["checks"]:
+                    st.error(f"⚠️ {problem}")
+            else:
+                st.success("✅ 1 page · details filled in · readable by ATS")
             st.download_button("⬇️ Download tailored resume (PDF)",
                                data=pdf.read_bytes(), file_name=pdf.name,
                                mime="application/pdf", type="primary")
