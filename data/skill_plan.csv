@@ -1,0 +1,17 @@
+skill,project,days
+A/B Testing,Analyze a public A/B test dataset: power analysis + significance test + write-up,2
+Experimentation,Same A/B test project: experiment design section,1
+PyTorch,Rebuild the pneumonia CNN in PyTorch and compare with TensorFlow,2
+Spark,Run one analysis in PySpark (Big Data course project or public dataset),3
+AWS,Deploy ResumeFit or the CNN app on AWS free tier (S3 + EC2 or Lambda),2
+Docker,Containerize ResumeFit with a Dockerfile,1
+Time Series,Forecasting project with ARIMA and Prophet on public data,2
+Data Warehousing,Build a small star-schema warehouse in SQL,2
+Data Modeling,Same star-schema project: ER diagram + normalization,1
+Airflow,Schedule a small ETL pipeline with Airflow,2
+Kubernetes,Deploy the Docker image to a free Kubernetes cluster,3
+GCP,Deploy one project on Google Cloud free tier,2
+Azure,Deploy one project on Azure free tier,2
+C++,Solve 30 LeetCode problems in C++,7
+Bayesian,Bayesian A/B test with PyMC,2
+LLMs,Already covered by ResumeFit (OpenAI API + guardrails),0
