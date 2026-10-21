@@ -2,6 +2,7 @@ import csv
 import html
 import re
 from datetime import datetime, timezone
+from urllib.parse import urlparse
 
 import requests
 
@@ -62,7 +63,51 @@ def ashby(company, slug):
             for j in data["jobs"]]
 
 
-READERS = {"greenhouse": greenhouse, "lever": lever, "ashby": ashby}
+SEARCHES = ["data scientist", "machine learning", "data analyst",
+            "software engineer"]
+
+
+def workday_parts(careers_url):
+    """Split a Workday careers URL into host, tenant and site."""
+    url = urlparse(careers_url)
+    host = url.netloc
+    tenant = host.split(".")[0]
+    site = url.path.strip("/").split("/")[-1]
+    return host, tenant, site
+
+
+def workday(company, careers_url):
+    host, tenant, site = workday_parts(careers_url)
+    api = f"https://{host}/wday/cxs/{tenant}/{site}"
+    jobs, seen = [], set()
+    for query in SEARCHES:
+        response = requests.post(
+            f"{api}/jobs", headers=HEADERS, timeout=TIMEOUT,
+            json={"appliedFacets": {}, "limit": 20, "offset": 0,
+                  "searchText": query})
+        response.raise_for_status()
+        for j in response.json().get("jobPostings", []):
+            path = j["externalPath"]
+            if path in seen:
+                continue
+            seen.add(path)
+            job = make_job(company, path, j["title"], j.get("locationsText"),
+                           f"https://{host}/{site}{path}", j.get("postedOn"), "")
+            job["detail_api"] = f"{api}{path}"
+            jobs.append(job)
+    return jobs
+
+
+def job_description(job):
+    """Fetch a Workday job's description only when it's actually needed."""
+    if job["description"] or not job.get("detail_api"):
+        return job["description"]
+    info = get_json(job["detail_api"]).get("jobPostingInfo", {})
+    job["description"] = clean(info.get("jobDescription"))
+    return job["description"]
+
+READERS = {"greenhouse": greenhouse, "lever": lever, "ashby": ashby,
+           "workday": workday}
 
 
 def load_companies():
