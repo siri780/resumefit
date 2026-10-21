@@ -11,6 +11,8 @@ from app.ats import ROOT
 COMPANIES_FILE = ROOT / "data" / "companies.csv"
 HEADERS = {"User-Agent": "ResumeFit personal job alerts"}
 TIMEOUT = 20
+SEARCHES = ["data scientist", "machine learning", "data analyst",
+            "software engineer"]
 
 
 def get_json(url):
@@ -63,10 +65,6 @@ def ashby(company, slug):
             for j in data["jobs"]]
 
 
-SEARCHES = ["data scientist", "machine learning", "data analyst",
-            "software engineer"]
-
-
 def workday_parts(careers_url):
     """Split a Workday careers URL into host, tenant and site."""
     url = urlparse(careers_url)
@@ -106,6 +104,7 @@ def job_description(job):
     job["description"] = clean(info.get("jobDescription"))
     return job["description"]
 
+
 READERS = {"greenhouse": greenhouse, "lever": lever, "ashby": ashby,
            "workday": workday}
 
@@ -115,10 +114,12 @@ def load_companies():
         return list(csv.DictReader(f))
 
 
-def fetch_all():
+def fetch_all(include_workday=True):
     """Read every company's jobs. Returns (jobs, errors)."""
     jobs, errors = [], []
     for c in load_companies():
+        if c["source"] == "workday" and not include_workday:
+            continue
         try:
             jobs += READERS[c["source"]](c["company"], c["slug"])
         except Exception as error:

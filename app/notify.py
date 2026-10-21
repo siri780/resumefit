@@ -1,0 +1,37 @@
+import html
+import os
+
+import requests
+
+
+def send_telegram(text):
+    """Send a message to your phone. Returns (ok, info)."""
+    token = os.getenv("TELEGRAM_BOT_TOKEN")
+    chat_id = os.getenv("TELEGRAM_CHAT_ID")
+    if not token or not chat_id:
+        return False, "Telegram is not set up"
+    response = requests.post(
+        f"https://api.telegram.org/bot{token}/sendMessage",
+        json={"chat_id": chat_id, "text": text, "parse_mode": "HTML",
+              "disable_web_page_preview": True},
+        timeout=20,
+    )
+    return response.ok, response.json().get("description", "sent")
+
+
+def format_alert(match):
+    """Turn one ranked job into a short phone message."""
+    e = html.escape
+    missing = ", ".join(match["missing"][:5]) or "none"
+    return (
+        f"🆕 <b>{e(match['company'])}</b> · {e(match['title'])}\n"
+        f"📍 {e(match['location'])}\n"
+        f"🎯 {match['tier']} · ATS {match['ats']}% · score {match['score']}\n"
+        f"🛂 {e(match['sponsorship'])}\n"
+        f"❌ Missing: {e(missing)}\n"
+        f"🔗 <a href=\"{e(match['url'])}\">Open job</a>"
+    )
+
+
+if __name__ == "__main__":
+    print(send_telegram("✅ <b>ResumeFit</b> is connected. Job alerts will arrive here."))

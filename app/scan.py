@@ -28,9 +28,9 @@ def remember(con, jobs):
     return new
 
 
-def scan():
+def scan(include_workday=True):
     """Find new, relevant, well-matched jobs. Returns (matches, errors, total)."""
-    jobs, errors = fetch_all()
+    jobs, errors = fetch_all(include_workday)
     con = connect()
     first_run = con.execute("SELECT COUNT(*) FROM seen").fetchone()[0] == 0
     new = remember(con, jobs)
