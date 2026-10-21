@@ -7,5 +7,6 @@ scikit-learn
 rapidfuzz
 pdfplumber
 python-dotenv
-pytestgoogle-api-python-client
+pytest
+google-api-python-client
 google-auth-oauthlib
