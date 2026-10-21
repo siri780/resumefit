@@ -12,6 +12,20 @@ def git(*args):
                           capture_output=True, text=True)
 
 
+def repo_url(token):
+    return f"https://x-access-token:{token}@github.com/{REPO}.git"
+
+
+def restore():
+    """If the applications folder is missing, bring it back from the private repo."""
+    token = os.getenv("APPS_REPO_TOKEN")
+    if not token or (APPS_DIR / ".git").exists():
+        return
+    subprocess.run(["git", "clone", "-q", repo_url(token), str(APPS_DIR)],
+                   capture_output=True, text=True)
+    git("remote", "set-url", "origin", f"https://github.com/{REPO}.git")
+
+
 def backup(message):
     """Commit and push the applications folder to the private repo.
 
@@ -23,14 +37,13 @@ def backup(message):
 
     if not (APPS_DIR / ".git").exists():
         git("init", "-b", "main")
-        git("config", "user.name", "Shirisha Gajendra")
-        git("config", "user.email", "gshirisha235@gmail.com")
+    git("config", "user.name", "Shirisha Gajendra")
+    git("config", "user.email", "gshirisha235@gmail.com")
 
     git("add", "-A")
     git("commit", "-m", message)
 
-    url = f"https://x-access-token:{token}@github.com/{REPO}.git"
-    push = git("push", url, "main")
+    push = git("push", repo_url(token), "main")
     if push.returncode != 0:
         error = push.stderr.replace(token, "***").strip()
         return False, f"Backup failed: {error[-300:]}"

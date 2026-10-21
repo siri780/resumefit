@@ -1,3 +1,4 @@
+import sys, pathlib; sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))  # noqa
 import re
 import subprocess
 
@@ -5,17 +6,19 @@ import streamlit as st
 
 from app.applications import TRACKER, already_applied, save_application
 from app.ats import ROOT, find_skills, latex_to_text, load_skills, score
-from app.backup import backup
+from app.backup import backup, restore
 from app.build_pdf import OUTPUT, build_pdf
 from app.drive import upload_to_drive
 from app.latex_io import apply_edits, get_bullets
 from app.pdf_check import check_pdf
 from app.tailor import load_approved, save_approved, tailor
-from app.ui import CSS, card, chips, hero, score_color, score_ring
+from app.ui import CSS, card, chips, hero, score_color, score_ring, require_password
 
 RESUME = ROOT / "data" / "resume.tex"
 
 st.set_page_config(page_title="ResumeFit", page_icon="📄", layout="wide")
+require_password()
+restore()
 st.markdown(CSS, unsafe_allow_html=True)
 st.markdown(hero("📄 ResumeFit",
                  "Paste a job description. Get your ATS match, honest AI "

@@ -1,3 +1,4 @@
+import sys, pathlib; sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[2]))  # noqa
 import altair as alt
 import pandas as pd
 import streamlit as st
@@ -5,10 +6,11 @@ import streamlit as st
 from app.ats import ROOT, find_skills, latex_to_text, load_skills
 from app.skill_gaps import load_plan, saved_job_descriptions, skill_gaps
 from app.tailor import load_approved
-from app.ui import CSS, card, hero
+from app.ui import CSS, card, hero, require_password
 
 st.set_page_config(page_title="Skill Gaps · ResumeFit", page_icon="🧭",
                    layout="wide")
+require_password()
 st.markdown(CSS, unsafe_allow_html=True)
 st.markdown(hero("🧭 Skill Gaps",
                  "Skills your target jobs ask for that your resume doesn't "

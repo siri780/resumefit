@@ -1,3 +1,8 @@
+import hmac
+import os
+
+import streamlit as st
+
 CSS = """
 <style>
 .block-container {padding-top: 2rem; max-width: 1150px;}
@@ -7,11 +12,11 @@ CSS = """
 .hero p {color: #E0E7FF; margin: 6px 0 0 0; font-size: 1.05rem;}
 .card {background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 14px;
        padding: 18px 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-       text-align: center; min-height: 210px;
+       text-align: center; height: 210px;
        display: flex; flex-direction: column; justify-content: center;}
 .card .label {color: #6B7280; font-size: 0.8rem; text-transform: uppercase;
               letter-spacing: 0.06em; margin-bottom: 6px;}
-.card .value {font-size: 2rem; font-weight: 700; color: #111827; white-space: nowrap}
+.card .value {font-size: 2rem; font-weight: 700; color: #111827; white-space: nowrap;}
 .ring {width: 120px; height: 120px; border-radius: 50%; margin: 0 auto;
        display: flex; align-items: center; justify-content: center;}
 .ring-inner {width: 92px; height: 92px; border-radius: 50%; background: #FFFFFF;
@@ -52,3 +57,17 @@ def score_color(pct, target):
     if pct >= 70:
         return "#F59E0B"
     return "#DC2626"
+
+
+def require_password():
+    """Ask for the app password when one is set (only online, not in Codespaces)."""
+    expected = os.getenv("APP_PASSWORD")
+    if not expected or st.session_state.get("authed"):
+        return
+    entered = st.text_input("🔒 Password", type="password")
+    if entered and hmac.compare_digest(entered, expected):
+        st.session_state["authed"] = True
+        st.rerun()
+    if entered:
+        st.error("Wrong password")
+    st.stop()

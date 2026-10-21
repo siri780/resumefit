@@ -1,13 +1,15 @@
+import sys, pathlib; sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[2]))  # noqa
 import pandas as pd
 import streamlit as st
 
 from app.applications import FIELDS, STATUSES, TRACKER, read_tracker, write_tracker
 from app.backup import backup
 from app.drive import upload_to_drive
-from app.ui import CSS, card, hero
+from app.ui import CSS, card, hero, require_password
 
 st.set_page_config(page_title="Tracker · ResumeFit", page_icon="📋",
                    layout="wide")
+require_password()
 st.markdown(CSS, unsafe_allow_html=True)
 st.markdown(hero("📋 Application Tracker",
                  "Every application you've saved, in one place."),
