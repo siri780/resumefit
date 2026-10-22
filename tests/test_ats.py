@@ -33,3 +33,8 @@ def test_leadership_found_in_resume():
     resume_text = latex_to_text(resume_tex)
 
     assert "Leadership" in find_skills(resume_text, load_skills())
+
+def test_link_targets_are_not_resume_text():
+    tex = "\\begin{document}\\href{https://github.com/x/resumefit}{\\underline{GitHub}}\\end{document}"
+    text = latex_to_text(tex)
+    assert "GitHub" in text and "resumefit" not in text

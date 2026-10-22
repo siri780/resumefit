@@ -1,0 +1,60 @@
+import app.taps as taps
+from app.scan import connect
+
+
+def test_alert_round_trip(tmp_path):
+    con = connect(tmp_path / "t.db")
+    match = {"id": "greenhouse:acme:1", "company": "Acme", "title": "ML Engineer",
+             "location": "NY", "url": "https://x", "base": "ML Engineer",
+             "description": "Python and PyTorch"}
+    buttons = taps.remember_alert(con, match)
+    data = buttons[0][0]["callback_data"]
+    assert data.startswith(taps.BUTTON_PREFIX) and len(data.encode()) <= 64
+    job = taps.find_alert(con, data[len(taps.BUTTON_PREFIX):])
+    assert job["company"] == "Acme" and job["base"] == "ML Engineer"
+
+
+def test_only_my_taps_are_handled(monkeypatch, tmp_path):
+    monkeypatch.setenv("TELEGRAM_CHAT_ID", "42")
+    updates = [
+        {"update_id": 1, "callback_query": {"id": "a", "data": "t:abc",
+                                            "message": {"chat": {"id": 42}}}},
+        {"update_id": 2, "callback_query": {"id": "b", "data": "t:abc",
+                                            "message": {"chat": {"id": 99}}}},
+        {"update_id": 3, "callback_query": {"id": "c", "data": "other",
+                                            "message": {"chat": {"id": 42}}}},
+    ]
+    monkeypatch.setattr(taps, "telegram",
+                        lambda method, **kw: {"ok": True, "result": updates})
+    _, mine = taps.get_taps()
+    assert [q["id"] for q in mine] == ["a"]
+
+
+def test_process_taps_tailors_and_confirms(monkeypatch, tmp_path):
+    monkeypatch.setenv("TELEGRAM_CHAT_ID", "42")
+    con = connect(tmp_path / "t.db")
+    key = taps.remember_alert(con, {"id": "x:1", "company": "Acme",
+                                    "title": "DS", "url": "u", "base": "Data Scientist",
+                                    "description": "SQL"})[0][0]["callback_data"]
+    calls, tailored = [], []
+    update = {"update_id": 7, "callback_query": {
+        "id": "q", "data": key, "message": {"chat": {"id": 42}}}}
+
+    def fake(method, **kw):
+        calls.append((method, kw))
+        return {"ok": True, "result": [update]}
+
+    monkeypatch.setattr(taps, "telegram", fake)
+    monkeypatch.setattr(taps, "tailor_job", lambda job: tailored.append(job))
+    assert taps.process_taps(con) == 1
+    assert tailored[0]["company"] == "Acme"
+    assert ("getUpdates", {"offset": 8, "limit": 1, "timeout": 0}) in calls
+
+
+def test_edits_message_lists_before_and_after():
+    job = {"company": "Acme", "title": "DS", "base": "Data Scientist", "url": "u"}
+    msg = taps.edits_message(job, {"percent": 60, "missing": []},
+                             {"percent": 70, "missing": ["Spark"]},
+                             [{"original": "Did 40\\% work", "new": "Drove 40\\% work"}], 1)
+    assert "60% → 70%" in msg and "Drove 40% work" in msg
+    assert "1 suggestion(s) blocked" in msg and "Spark" in msg

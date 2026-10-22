@@ -4,7 +4,8 @@ from datetime import datetime
 
 from app.applications import TIMEZONE
 from app.notify import format_alert, send_telegram
-from app.scan import scan
+from app.scan import connect, scan
+from app.taps import process_taps, remember_alert, send_message
 
 INTERVAL_SECONDS = 5 * 60
 WORKDAY_EVERY = 6
@@ -12,16 +13,23 @@ MAX_ALERTS = 10
 
 
 def run_once(cycle):
-    """One scan: send the best new matches to your phone."""
+    """Handle button taps, then send the best new matches to your phone."""
+    con = connect()
+    try:
+        tapped = process_taps(con)
+    except Exception as error:
+        tapped = 0
+        print(f"Tap handling failed: {error}", flush=True)
     include_workday = cycle % WORKDAY_EVERY == 0
     matches, errors, total = scan(include_workday)
     for match in matches[:MAX_ALERTS]:
-        send_telegram(format_alert(match))
+        send_message(format_alert(match), remember_alert(con, match))
     if len(matches) > MAX_ALERTS:
         send_telegram(f"…and {len(matches) - MAX_ALERTS} more new matches.")
     now = datetime.now(TIMEZONE).strftime("%H:%M")
     print(f"[{now}] checked {total} jobs · {len(matches)} matches · "
-          f"{len(errors)} errors · workday={include_workday}", flush=True)
+          f"{len(errors)} errors · workday={include_workday} · "
+          f"tailored={tapped}", flush=True)
 
 
 if __name__ == "__main__":

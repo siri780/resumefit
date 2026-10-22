@@ -26,6 +26,7 @@ def latex_to_text(tex):
     end = tex.find("\\end{document}")
     if start != -1 and end != -1:
         tex = tex[start:end]
+    tex = re.sub(r"\\href\{[^}]*\}", " ", tex)  # link targets are not shown
     tex = re.sub(r"\\[a-zA-Z]+", " ", tex)
     tex = tex.replace("{", " ").replace("}", " ").replace("\\", "")
     return tex
