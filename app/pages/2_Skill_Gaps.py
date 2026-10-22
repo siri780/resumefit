@@ -3,7 +3,8 @@ import altair as alt
 import pandas as pd
 import streamlit as st
 
-from app.ats import ROOT, find_skills, latex_to_text, load_skills
+from app.ats import find_skills, latex_to_text, load_skills
+from app.bases import BASES, load_base
 from app.skill_gaps import load_plan, saved_job_descriptions, skill_gaps
 from app.tailor import load_approved
 from app.ui import CSS, card, hero, require_password
@@ -18,7 +19,8 @@ st.markdown(hero("🧭 Skill Gaps",
             unsafe_allow_html=True)
 
 skills = load_skills()
-tex = (ROOT / "data" / "resume.tex").read_text(encoding="utf-8")
+base = st.selectbox("Compare against base resume", list(BASES))
+tex = load_base(base)
 have = find_skills(latex_to_text(tex), skills) | load_approved()
 
 jds = saved_job_descriptions()

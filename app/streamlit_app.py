@@ -5,8 +5,9 @@ import subprocess
 import streamlit as st
 
 from app.applications import TRACKER, already_applied, save_application
-from app.ats import ROOT, find_skills, latex_to_text, load_skills, score
+from app.ats import find_skills, latex_to_text, load_skills, score
 from app.backup import backup, restore
+from app.bases import BASES, DEFAULT, load_base, pick_base
 from app.build_pdf import OUTPUT, build_pdf
 from app.drive import upload_to_drive
 from app.latex_io import apply_edits, get_bullets
@@ -14,7 +15,7 @@ from app.pdf_check import check_pdf
 from app.tailor import load_approved, save_approved, tailor
 from app.ui import CSS, card, chips, hero, score_color, score_ring, require_password
 
-RESUME = ROOT / "data" / "resume.tex"
+AUTO = "Auto (job title first)"
 
 st.set_page_config(page_title="ResumeFit", page_icon="📄", layout="wide")
 require_password()
@@ -26,7 +27,8 @@ st.markdown(hero("📄 ResumeFit",
             unsafe_allow_html=True)
 
 skills = load_skills()
-tex = RESUME.read_text(encoding="utf-8")
+base = st.session_state.get("base", DEFAULT)
+tex = load_base(base)
 resume_skills = find_skills(latex_to_text(tex), skills)
 
 
@@ -53,6 +55,17 @@ with st.sidebar:
     st.subheader("Your profile")
     st.write("**Shirisha Gajendra**")
     st.caption("MS Data Science · Stony Brook University · May 2027")
+    st.divider()
+
+    def clear_results():
+        for key in ("result", "jd", "suggestions", "tailored", "base",
+                    "base_how"):
+            st.session_state.pop(key, None)
+
+    pick = st.selectbox("Base resume", [AUTO, *BASES], on_change=clear_results,
+                        help="Auto uses the base that matches the job title. "
+                             "If the title is unclear, it uses the base that "
+                             "best matches the job description.")
     st.divider()
     target = st.slider("Target ATS score (%)", 70, 100, 90, step=5)
     st.divider()
@@ -83,10 +96,18 @@ if st.button("Analyze match", type="primary", width="stretch"):
     if not jd.strip():
         st.warning("Please paste a job description first.")
     else:
-        st.session_state["result"] = score(latex_to_text(tex), jd, skills)
+        if pick == AUTO:
+            chosen_base, result, how = pick_base(role, jd, skills)
+        else:
+            chosen_base, how = pick, "manual"
+            result = score(latex_to_text(load_base(pick)), jd, skills)
+        st.session_state["base"] = chosen_base
+        st.session_state["base_how"] = how
+        st.session_state["result"] = result
         st.session_state["jd"] = jd
         st.session_state.pop("suggestions", None)
         st.session_state.pop("tailored", None)
+        st.rerun()
 
 # ---------- Results ----------
 if "result" in st.session_state:
@@ -108,6 +129,11 @@ if "result" in st.session_state:
     c3.markdown(card("Missing skills", len(result["missing"])),
                 unsafe_allow_html=True)
     c4.markdown(card("Verdict", verdict), unsafe_allow_html=True)
+
+    why = {"title": "matches the job title",
+           "match": "job title unclear, picked by best match",
+           "manual": "chosen by you"}[st.session_state.get("base_how", "title")]
+    st.caption(f"📄 Scored against your **{base}** base resume ({why})")
 
     st.write("")
     tab1, tab2 = st.tabs(["🧩 Skills", "✨ Tailor with AI"])

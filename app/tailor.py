@@ -81,7 +81,7 @@ def tailor(bullets, jd, resume_skills, skills, missing):
 
 
 if __name__ == "__main__":
-    tex = (ROOT / "data" / "resume.tex").read_text(encoding="utf-8")
+    tex = (ROOT / "data" / "resume_ds.tex").read_text(encoding="utf-8")
     jd = (ROOT / "data" / "sample_jd.txt").read_text(encoding="utf-8")
     skills = load_skills()
     resume_skills = find_skills(latex_to_text(tex), skills)

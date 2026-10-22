@@ -66,3 +66,13 @@ Healthcare,healthcare|health care|clinical|ehr|electronic health records|real-wo
 KPIs,kpi|kpis|metrics|key performance indicators,analytics,no
 Stakeholder Communication,stakeholders|stakeholder|cross-functional|communicate|communication,soft,no
 Leadership,leadership|led|mentored|mentoring|mentor|coordinator|coordinated|vice president|organized|team lead,soft,no
+OOP,oop|object-oriented|object oriented,engineering,no
+Unit Testing,unit test|unit tests|unit testing|pytest|junit|tdd|test-driven,engineering,no
+Data Structures & Algorithms,data structures|algorithms|dsa,engineering,no
+System Design,system design|software architecture,engineering,no
+Distributed Systems,distributed system|distributed systems|distributed computing,engineering,no
+Microservices,microservice|microservices,engineering,no
+Backend,backend|back-end|back end,engineering,no
+Agile,agile|scrum,engineering,no
+Random Forest,random forest|random forests,ml,no
+OpenCV,opencv,library,no

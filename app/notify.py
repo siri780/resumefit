@@ -27,6 +27,8 @@ def format_alert(match):
         f"🆕 <b>{e(match['company'])}</b> · {e(match['title'])}\n"
         f"📍 {e(match['location'])}\n"
         f"🎯 {match['tier']} · ATS {match['ats']}% · score {match['score']}\n"
+        f"📄 Use: {e(match.get('base', 'Data Scientist'))} resume"
+        f"{' (title unclear, picked by match)' if match.get('base_how') == 'match' else ''}\n"
         f"🛂 {e(match['sponsorship'])}\n"
         f"❌ Missing: {e(missing)}\n"
         f"🔗 <a href=\"{e(match['url'])}\">Open job</a>"

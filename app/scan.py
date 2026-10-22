@@ -2,7 +2,8 @@ import sqlite3
 from datetime import datetime
 
 from app.applications import TIMEZONE
-from app.ats import ROOT, find_skills, latex_to_text, load_skills, score
+from app.ats import ROOT, load_skills
+from app.bases import pick_base
 from app.feeds import fetch_all, job_description
 from app.rank import assess, is_relevant
 from app.tailor import load_approved
@@ -38,18 +39,19 @@ def scan(include_workday=True):
         return [], errors, len(jobs)
 
     skills = load_skills()
-    tex = (ROOT / "data" / "resume.tex").read_text(encoding="utf-8")
-    resume_text = latex_to_text(tex)
+    texts = {}
     matches = []
     for job in new:
         if not is_relevant(job):
             continue
         job_description(job)
-        ats = score(resume_text, job["description"], skills)
+        base, ats, how = pick_base(job["title"], job["description"], skills,
+                                   texts)
         result = assess(job, ats["percent"])
         if result["show"]:
             matches.append({**job, **result, "ats": ats["percent"],
-                            "missing": ats["missing"]})
+                            "missing": ats["missing"], "base": base,
+                            "base_how": how})
     return sorted(matches, key=lambda m: m["score"], reverse=True), errors, len(jobs)
 
 
@@ -57,5 +59,5 @@ if __name__ == "__main__":
     matches, errors, total = scan()
     print(f"Checked {total} jobs · {len(matches)} new matches · {len(errors)} errors")
     for m in matches[:10]:
-        print(f"[{m['score']}] {m['tier']:<9} {m['ats']}%  {m['company']} - "
+        print(f"[{m['score']}] {m['tier']:<9} {m['ats']}% ({m['base']})  {m['company']} - "
               f"{m['title']}  ({m['location']})\n      {m['url']}")

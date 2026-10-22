@@ -62,7 +62,7 @@ def score(resume_text, jd_text, skills=None):
 
 
 if __name__ == "__main__":
-    resume = latex_to_text((ROOT / "data" / "resume.tex").read_text(encoding="utf-8"))
+    resume = latex_to_text((ROOT / "data" / "resume_ds.tex").read_text(encoding="utf-8"))
     jd = (ROOT / "data" / "sample_jd.txt").read_text(encoding="utf-8")
     result = score(resume, jd)
     print(f"ATS score: {result['percent']}%")
