@@ -1,0 +1,163 @@
+\documentclass[letterpaper,11pt]{article}
+\usepackage[T1]{fontenc}
+
+\usepackage{latexsym}
+\usepackage[empty]{fullpage}
+\usepackage{titlesec}
+\usepackage{marvosym}
+\usepackage[usenames,dvipsnames]{color}
+\usepackage{verbatim}
+\usepackage{enumitem}
+\usepackage[hidelinks]{hyperref}
+\usepackage{fancyhdr}
+\usepackage[english]{babel}
+\usepackage{tabularx}
+\input{glyphtounicode}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyfoot{}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0pt}
+
+\addtolength{\oddsidemargin}{-0.55in}
+\addtolength{\evensidemargin}{-0.55in}
+\addtolength{\textwidth}{1.1in}
+\addtolength{\topmargin}{-0.6in}
+\addtolength{\textheight}{1.2in}
+
+\urlstyle{same}
+\raggedbottom
+\raggedright
+\setlength{\tabcolsep}{0in}
+
+\titleformat{\section}{
+  \vspace{-5pt}\scshape\raggedright\large
+}{}{0em}{}[\color{black}\titlerule \vspace{-5pt}]
+
+\pdfgentounicode=1
+
+%-------------------------
+\newcommand{\resumeItem}[1]{\item\small{{#1 \vspace{-2pt}}}}
+
+\newcommand{\resumeSubheading}[4]{
+  \vspace{-2pt}\item
+    \begin{tabular*}{0.97\textwidth}[t]{l@{\extracolsep{\fill}}r}
+      \textbf{#1} & #2 \\
+      \textit{\small#3} & \textit{\small #4} \\
+    \end{tabular*}\vspace{-7pt}
+}
+
+\newcommand{\resumeProjectHeading}[2]{
+    \item
+    \begin{tabular*}{0.97\textwidth}{l@{\extracolsep{\fill}}r}
+      \small#1 & #2 \\
+    \end{tabular*}\vspace{-7pt}
+}
+
+\renewcommand\labelitemii{$\vcenter{\hbox{\tiny$\bullet$}}$}
+\newcommand{\resumeSubHeadingListStart}{\begin{itemize}[leftmargin=0.15in, label={}]}
+\newcommand{\resumeSubHeadingListEnd}{\end{itemize}}
+\newcommand{\resumeItemListStart}{\begin{itemize}[itemsep=0pt,topsep=4pt,parsep=0pt]}
+\newcommand{\resumeItemListEnd}{\end{itemize}\vspace{-5pt}}
+
+%-------------------------------------------
+\begin{document}
+
+%----------HEADING----------
+\begin{center}
+    \textbf{\Huge \scshape Shirisha Gajendra} \\ \vspace{1pt}
+    \small {{PHONE}} $|$
+    \href{mailto:{{EMAIL}}}{\underline{{{EMAIL}}}} $|$
+    \href{https://www.linkedin.com/in/shirisha-gajendra}{\underline{linkedin.com/in/shirisha-gajendra}} $|$
+    \href{https://github.com/siri780}{\underline{github.com/siri780}} $|$
+    New York, NY
+\end{center}
+
+%----------EDUCATION----------
+\section{Education}
+  \resumeSubHeadingListStart
+    \resumeSubheading
+      {Stony Brook University}{Stony Brook, NY}
+      {Master of Science in Data Science $|$ GPA: 3.58/4.0}{Aug 2025 -- May 2027}
+      \resumeItemListStart
+        \resumeItem{\textbf{Coursework:} Statistical Learning, Big Data Analysis, Data Analysis, Data Management, Statistical Computing}
+      \resumeItemListEnd
+    \resumeSubheading
+      {Sai Vidya Institute of Technology}{Bengaluru, India}
+      {B.E. Computer Science \& Engineering (Data Science) $|$ GPA: 9.17/10}{Dec 2021 -- May 2025}
+  \resumeSubHeadingListEnd
+
+%----------EXPERIENCE----------
+\section{Experience}
+  \resumeSubHeadingListStart
+
+    \resumeSubheading
+      {Stony Brook University -- Division of Nephrology and Hypertension}{Stony Brook, NY}
+      {Research Assistant -- Statistical Analysis}{Jan 2026 -- Present}
+      \resumeItemListStart
+        \resumeItem{Conduct end-to-end statistical analysis for clinical comparative effectiveness research on electronic health record (EHR) cohorts of tens of thousands of patients, from cohort construction to final results.}
+        \resumeItem{Built reproducible R/RMarkdown workflows reused across 2 research projects, reducing repeated analysis effort.}
+      \resumeItemListEnd
+
+    \resumeSubheading
+      {Rail Wheel Factory}{Bengaluru, India}
+      {Data Analytics Intern}{May 2024 -- Aug 2024}
+      \resumeItemListStart
+        \resumeItem{Built interactive Power BI dashboards tracking KPIs across 3 departments, giving managers a single view of operational performance.}
+        \resumeItem{Automated SQL ETL pipelines that reduced manual reporting workload by 40\%.}
+      \resumeItemListEnd
+
+    \resumeSubheading
+      {QSpiders Global}{Bengaluru, India}
+      {Software Engineer Intern}{Sep 2023 -- Nov 2023}
+      \resumeItemListStart
+        \resumeItem{Developed 2 Java applications using OOP principles and REST APIs; optimized SQL queries in an Agile/Scrum team using Git.}
+      \resumeItemListEnd
+
+  \resumeSubHeadingListEnd
+
+%----------PROJECTS----------
+\section{Projects}
+    \resumeSubHeadingListStart
+      \resumeProjectHeading
+          {\textbf{ResumeFit -- Automated Job Pipeline \& Web App} $|$ \emph{Python, SQLite, GitHub Actions (CI/CD), pytest}}{\href{https://github.com/siri780/resumefit}{\underline{GitHub}}}
+          \resumeItemListStart
+            \resumeItem{Engineered a backend pipeline that ingests postings from Greenhouse, Lever, Ashby and Workday REST APIs, deduplicates them in a SQLite database, and ranks roles by skill match, seniority and visa sponsorship.}
+            \resumeItem{Deployed a password-protected Streamlit web app with continuous deployment from GitHub and a scheduled GitHub Actions workflow that runs every 5 minutes and sends real-time Telegram alerts.}
+            \resumeItem{Wrote pytest unit tests for core modules and a validation layer that rejects invalid LLM output, LaTeX errors and multi-page PDFs before saving.}
+          \resumeItemListEnd
+      \resumeProjectHeading
+          {\textbf{AuthPrivacyChain -- Blockchain Access Control} $|$ \emph{Python, Flask, Solidity, Web3.py, IPFS}}{\href{https://github.com/siri780/Authprivacychain-A-blockchain-based-access-control-framework-with-privacy-protection-in-cloud}{\underline{GitHub}}}
+          \resumeItemListStart
+            \resumeItem{Built a decentralized cloud access control framework using Ethereum smart contracts written in Solidity, with files stored on IPFS.}
+            \resumeItem{Developed a Flask/Web3.py web interface with role-based access for 3 user roles, AES encryption, and time/event-based automatic access revocation.}
+          \resumeItemListEnd
+      \resumeProjectHeading
+          {\textbf{Pneumonia Detection from Chest X-Rays} $|$ \emph{Python, TensorFlow, Flask}}{\href{https://github.com/siri780/Pneumonia-Detection-from-Chest-X-Rays-Using-CNN}{\underline{GitHub}}}
+          \resumeItemListStart
+            \resumeItem{Built and deployed a CNN image classifier (92.07\% accuracy) behind a Flask web app that returns predictions in under 3 seconds.}
+          \resumeItemListEnd
+    \resumeSubHeadingListEnd
+
+%----------SKILLS----------
+\section{Skills}
+ \begin{itemize}[leftmargin=0.15in, label={}]
+    \small{\item{
+     \textbf{Languages}{: Java, Python, SQL, R, Solidity} \\
+     \textbf{Software Engineering}{: OOP, REST APIs, Unit Testing, CI/CD, Database Design, Web Development, Agile/Scrum} \\
+     \textbf{Frameworks \& Tools}{: Flask, Streamlit, Git, GitHub Actions, pytest, MySQL, SQLite, Web3.py, IPFS, Linux} \\
+     \textbf{Data \& ML}{: pandas, NumPy, scikit-learn, TensorFlow/Keras, Machine Learning, Power BI}
+    }}
+ \end{itemize}
+
+%----------ACHIEVEMENTS----------
+\section{Certifications \& Leadership}
+ \begin{itemize}[leftmargin=0.15in, label={}]
+    \small{\item{
+     \textbf{Certification}{: Machine Learning Specialization -- Andrew Ng, DeepLearning.AI (Completed)} \\
+     \textbf{Leadership}{: Vice President, Robotics Club (2023--2025) -- organized AI/ML hackathons and mentored 50+ students; Coordinator, IEEE INOCON 2024; Winner, MAGNOVITE Fest, Christ University (Feb 2024)}
+    }}
+ \end{itemize}
+
+\end{document}
