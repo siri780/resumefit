@@ -58,3 +58,22 @@ def test_edits_message_lists_before_and_after():
                              [{"original": "Did 40\\% work", "new": "Drove 40\\% work"}], 1)
     assert "60% → 70%" in msg and "Drove 40% work" in msg
     assert "1 suggestion(s) blocked" in msg and "Spark" in msg
+
+
+def test_chat_id_with_stray_whitespace_still_matches(monkeypatch):
+    monkeypatch.setenv("TELEGRAM_CHAT_ID", " 42\n")
+    updates = [{"update_id": 1, "callback_query": {
+        "id": "a", "data": "t:abc", "message": {"chat": {"id": 42}}}}]
+    monkeypatch.setattr(taps, "telegram",
+                        lambda method, **kw: {"ok": True, "result": updates})
+    assert [q["id"] for q in taps.get_taps()[1]] == ["a"]
+
+
+def test_network_error_does_not_crash(monkeypatch):
+    monkeypatch.setenv("TELEGRAM_BOT_TOKEN", "x")
+
+    def boom(*a, **k):
+        raise taps.requests.ConnectionError("down")
+
+    monkeypatch.setattr(taps.requests, "post", boom)
+    assert taps.telegram("getUpdates")["ok"] is False

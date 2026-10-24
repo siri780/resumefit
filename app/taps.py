@@ -28,15 +28,22 @@ def telegram(method, files=None, **params):
     if not token:
         return {"ok": False, "description": "Telegram is not set up"}
     url = f"https://api.telegram.org/bot{token}/{method}"
-    if files:
-        response = requests.post(url, data=params, files=files, timeout=60)
-    else:
-        response = requests.post(url, json=params, timeout=30)
-    return response.json()
+    try:
+        if files:
+            response = requests.post(url, data=params, files=files, timeout=60)
+        else:
+            response = requests.post(url, json=params, timeout=30)
+        reply = response.json()
+    except (requests.RequestException, ValueError) as error:
+        reply = {"ok": False, "description": f"network error: {error}"}
+    if not reply.get("ok"):
+        print(f"Telegram {method} failed: {reply.get('description')}",
+              flush=True)
+    return reply
 
 
 def my_chat():
-    return str(os.getenv("TELEGRAM_CHAT_ID", ""))
+    return str(os.getenv("TELEGRAM_CHAT_ID", "")).strip()
 
 
 def send_message(text, buttons=None):
@@ -49,9 +56,13 @@ def send_message(text, buttons=None):
 
 def send_pdf(path, filename, caption):
     with open(path, "rb") as f:
-        return telegram("sendDocument", files={"document": (filename, f)},
-                        chat_id=my_chat(), caption=caption[:1000],
-                        parse_mode="HTML")
+        reply = telegram("sendDocument", files={"document": (filename, f)},
+                         chat_id=my_chat(), caption=caption[:1000],
+                         parse_mode="HTML")
+    if not reply.get("ok"):
+        raise RuntimeError(f"could not send {filename}: "
+                           f"{reply.get('description')}")
+    return reply
 
 
 # ---------- Remembering alerted jobs ----------
@@ -93,14 +104,18 @@ def get_taps():
     reply = telegram("getUpdates", timeout=0,
                      allowed_updates=["callback_query"])
     updates = reply.get("result", []) if reply.get("ok") else []
-    taps = []
+    taps, other = [], 0
     for u in updates:
         q = u.get("callback_query")
         if not q or not q.get("data", "").startswith(BUTTON_PREFIX):
             continue
-        chat = str(q.get("message", {}).get("chat", {}).get("id", ""))
+        chat = str(q.get("message", {}).get("chat", {}).get("id", "")).strip()
         if chat == my_chat():
             taps.append(q)
+        else:
+            other += 1
+    print(f"Telegram: {len(updates)} update(s), {len(taps)} tap(s) from you, "
+          f"{other} tap(s) from another chat", flush=True)
     return updates, taps
 
 
@@ -175,9 +190,13 @@ def tailor_job(job):
                 else "⚠️ " + "; ".join(problems))
         send_pdf(tailored_pdf, f"Shirisha_Gajendra_Resume_{company}.pdf",
                  f"✨ Tailored for {html.escape(job['company'])} · "
-                 f"ATS {after['percent']}% · {note}")
+                 f"ATS {after['percent']}% · {html.escape(note)}")
 
-    send_message(edits_message(job, before, after, applied, blocked))
+    reply = send_message(edits_message(job, before, after, applied, blocked))
+    if not reply.get("ok"):
+        send_message(f"✨ {html.escape(job['company'])}: tailored PDF sent "
+                     f"(ATS {before['percent']}% → {after['percent']}%). "
+                     "The edit list was too long to show.")
 
 
 def process_taps(con):
@@ -187,13 +206,17 @@ def process_taps(con):
         telegram("answerCallbackQuery", callback_query_id=q["id"],
                  text="⏳ Tailoring now. PDFs arrive in a few minutes.")
         job = find_alert(con, q["data"][len(BUTTON_PREFIX):])
+        print(f"Tap: {'found' if job else 'NOT found'} in saved alerts",
+              flush=True)
         if not job:
             send_message("⚠️ That alert is too old or its details were "
                          "lost. Paste the job into the ResumeFit web app.")
             continue
         try:
             tailor_job(job)
+            print("Tap: tailored and sent", flush=True)
         except Exception as error:
+            print(f"Tap: failed: {type(error).__name__}", flush=True)
             send_message(f"⚠️ Couldn't tailor {html.escape(job['company'])}: "
                          f"{html.escape(str(error))[:300]}")
     confirm(updates)
@@ -207,7 +230,11 @@ def has_taps():
 if __name__ == "__main__":
     # Used by the GitHub workflow: only install LaTeX when a tap is waiting.
     if "--check" in sys.argv:
-        pending = has_taps()
+        try:
+            pending = has_taps()
+        except Exception as error:
+            print(f"Tap check failed: {error}")
+            pending = False
         out = os.getenv("GITHUB_OUTPUT")
         if out:
             with open(out, "a", encoding="utf-8") as f:
