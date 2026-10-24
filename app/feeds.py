@@ -110,8 +110,35 @@ def job_description(job):
     return job["description"]
 
 
+def amazon(company, slug=""):
+    """Amazon's public job search (U.S. only, newest first)."""
+    jobs, seen = [], set()
+    for query in SEARCHES:
+        response = requests.get(
+            "https://www.amazon.jobs/en/search.json", headers=HEADERS,
+            timeout=TIMEOUT,
+            params={"base_query": query, "country": "USA",
+                    "result_limit": 100, "sort": "recent"})
+        response.raise_for_status()
+        for j in response.json().get("jobs", []):
+            if j["id_icims"] in seen:
+                continue
+            seen.add(j["id_icims"])
+            description = " ".join(filter(None, [
+                j.get("description"),
+                "Basic qualifications:", j.get("basic_qualifications"),
+                "Preferred qualifications:", j.get("preferred_qualifications")]))
+            jobs.append(make_job(
+                company, j["id_icims"], j["title"],
+                j.get("normalized_location") or j.get("location"),
+                "https://www.amazon.jobs" + j["job_path"],
+                j.get("posted_date"), description))
+    return jobs
+
+
 READERS = {"greenhouse": greenhouse, "lever": lever, "ashby": ashby,
-           "workday": workday}
+           "workday": workday, "amazon": amazon}
+SLOW_SOURCES = {"workday", "amazon"}  # big boards: checked every ~30 minutes
 
 
 def load_companies():
@@ -123,7 +150,7 @@ def fetch_all(include_workday=True):
     """Read every company's jobs. Returns (jobs, errors)."""
     jobs, errors = [], []
     for c in load_companies():
-        if c["source"] == "workday" and not include_workday:
+        if c["source"] in SLOW_SOURCES and not include_workday:
             continue
         try:
             jobs += READERS[c["source"]](c["company"], c["slug"])

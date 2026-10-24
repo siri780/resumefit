@@ -22,11 +22,16 @@ def remember(con, jobs):
     """Save job ids; return only the jobs never seen before."""
     now = datetime.now(TIMEZONE).isoformat(timespec="minutes")
     known = {row[0] for row in con.execute("SELECT id FROM seen")}
+    known_companies = {k.split(":", 1)[0] for k in known}
     new = [j for j in jobs if j["id"] not in known]
+    # A company seen for the first time is saved silently, so adding a big
+    # board (like Amazon) doesn't flood you with hundreds of old jobs.
+    fresh = [j for j in new
+             if j["id"].split(":", 1)[0] in known_companies or not known]
     con.executemany("INSERT OR IGNORE INTO seen VALUES (?, ?)",
                     [(j["id"], now) for j in new])
     con.commit()
-    return new
+    return fresh
 
 
 def scan(include_workday=True):
