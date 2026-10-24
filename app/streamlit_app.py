@@ -12,6 +12,7 @@ from app.build_pdf import OUTPUT, build_pdf
 from app.drive import upload_to_drive
 from app.latex_io import apply_edits, get_bullets
 from app.pdf_check import check_pdf
+from app.rank import knockouts
 from app.tailor import load_approved, save_approved, tailor
 from app.ui import CSS, card, chips, hero, score_color, score_ring, require_password
 
@@ -59,7 +60,7 @@ with st.sidebar:
 
     def clear_results():
         for key in ("result", "jd", "suggestions", "tailored", "base",
-                    "base_how"):
+                    "base_how", "knockouts"):
             st.session_state.pop(key, None)
 
     pick = st.selectbox("Base resume", [AUTO, *BASES], on_change=clear_results,
@@ -104,6 +105,8 @@ if st.button("Analyze match", type="primary", width="stretch"):
         st.session_state["base"] = chosen_base
         st.session_state["base_how"] = how
         st.session_state["result"] = result
+        st.session_state["knockouts"] = knockouts(
+            {"title": role, "location": "", "description": jd})
         st.session_state["jd"] = jd
         st.session_state.pop("suggestions", None)
         st.session_state.pop("tailored", None)
@@ -134,6 +137,11 @@ if "result" in st.session_state:
            "match": "job title unclear, picked by best match",
            "manual": "chosen by you"}[st.session_state.get("base_how", "title")]
     st.caption(f"📄 Scored against your **{base}** base resume ({why})")
+    blockers = st.session_state.get("knockouts") or []
+    if blockers:
+        st.error("🚫 **Likely screened out, whatever the ATS score:** "
+                 + " · ".join(blockers)
+                 + ". Tailoring this one probably isn't worth the cost.")
 
     st.write("")
     tab1, tab2 = st.tabs(["🧩 Skills", "✨ Tailor with AI"])

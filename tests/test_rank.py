@@ -35,3 +35,27 @@ def test_reach_needs_high_match():
     senior = job("Senior Data Scientist")
     assert not assess(senior, 70)["show"]
     assert assess(senior, 80)["show"]
+
+def test_foreign_locations_are_skipped():
+    assert not is_relevant(job("Data Scientist", location="Warsaw; Poznan"))
+    assert not is_relevant(job("Software Engineer, New Grad", location="Taipei"))
+    assert not is_relevant(job("Data Scientist", location="Pune, IN"))
+    assert is_relevant(job("Data Scientist", location="US, MA, Westford"))
+    assert is_relevant(job("Data Scientist", location="Bengaluru, India; Seattle, WA"))
+    assert is_relevant(job("Data Scientist", location="2 Locations"))
+
+
+def test_knockouts():
+    from app.rank import knockouts
+    assert knockouts(job("Analyst", description="Sponsorship is not available for this role"))
+    assert knockouts(job("Analyst", description="Associate of Society of Actuaries (ASA) designation"))
+    assert not knockouts(job("Analyst", description="CFA preferred"))
+    assert knockouts(job("Scientist", description="A Ph.D. in CS or equivalent experience."))
+    assert not knockouts(job("Scientist", description="MS or PhD in statistics"))
+    assert knockouts(job("Staff Data Scientist"))
+    assert knockouts(job("Data Scientist", description="10+ years of experience"))
+
+
+def test_knocked_out_jobs_are_hidden():
+    result = assess(job("Data Scientist I", description="We do not sponsor visas."), 95)
+    assert result["blocked"] and not result["show"]

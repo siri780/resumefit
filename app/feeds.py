@@ -102,6 +102,11 @@ def job_description(job):
         return job["description"]
     info = get_json(job["detail_api"]).get("jobPostingInfo", {})
     job["description"] = clean(info.get("jobDescription"))
+    places = [info.get("location")] + list(info.get("additionalLocations") or [])
+    country = (info.get("country") or {}).get("descriptor")
+    places = [p for p in places + [country] if p]
+    if places:
+        job["location"] = "; ".join(places)
     return job["description"]
 
 

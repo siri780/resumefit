@@ -170,15 +170,18 @@ def tailor_job(job):
     tex = load_base(base)
     text = latex_to_text(tex)
     before = score(text, job["description"], skills)
-    suggestions = tailor(get_bullets(tex), job["description"],
-                         find_skills(text, skills), skills, before["missing"])
-    applied = [s for s in suggestions if not s["problems"]]
-    blocked = len(suggestions) - len(applied)
 
+    # Send the original first, so you always get a usable PDF even if the
+    # AI step fails (no credit, network error, ...).
     company = safe_name(job["company"])
     original_pdf = build_pdf(f"original_{company}", tex=tex)
     send_pdf(original_pdf, "Shirisha_Gajendra_Resume.pdf",
              f"📄 Original · {base} base · ATS {before['percent']}%")
+
+    suggestions = tailor(get_bullets(tex), job["description"],
+                         find_skills(text, skills), skills, before["missing"])
+    applied = [s for s in suggestions if not s["problems"]]
+    blocked = len(suggestions) - len(applied)
 
     after = before
     if applied:
