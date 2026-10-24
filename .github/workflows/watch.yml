@@ -40,9 +40,9 @@ jobs:
         if: steps.taps.outputs.pending == 'true'
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y -qq \
-            texlive-latex-base texlive-latex-extra texlive-fonts-recommended \
-            cm-super poppler-utils
+          sudo apt-get install -y -qq --no-install-recommends \
+            texlive-latex-base texlive-latex-recommended texlive-latex-extra \
+            texlive-fonts-recommended cm-super
 
       - run: python -m app.watch --once
         env:

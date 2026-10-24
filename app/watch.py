@@ -1,32 +1,51 @@
 import sys
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from app.applications import TIMEZONE
 from app.notify import format_alert, send_telegram
 from app.scan import connect, scan
 from app.taps import process_taps, remember_alert, send_message
 
-INTERVAL_SECONDS = 5 * 60
-WORKDAY_EVERY = 6
+INTERVAL_SECONDS = 60
+SCAN_EVERY = timedelta(minutes=4, seconds=30)
+WORKDAY_EVERY = timedelta(minutes=29)
 MAX_ALERTS = 10
 
 
-def run_once(cycle):
-    """Handle button taps, then send the best new matches to your phone."""
+def due(con, name, every):
+    """True (and remember now) if `every` has passed since `name` last ran."""
+    con.execute("CREATE TABLE IF NOT EXISTS state "
+                "(name TEXT PRIMARY KEY, value TEXT)")
+    row = con.execute("SELECT value FROM state WHERE name = ?",
+                      (name,)).fetchone()
+    now = datetime.now(TIMEZONE)
+    if row and now - datetime.fromisoformat(row[0]) < every:
+        return False
+    con.execute("INSERT OR REPLACE INTO state VALUES (?, ?)",
+                (name, now.isoformat()))
+    con.commit()
+    return True
+
+
+def run_once():
+    """Handle button taps every run; scan for new jobs every ~5 minutes."""
     con = connect()
     try:
         tapped = process_taps(con)
     except Exception as error:
         tapped = 0
         print(f"Tap handling failed: {error}", flush=True)
-    include_workday = cycle % WORKDAY_EVERY == 0
+    now = datetime.now(TIMEZONE).strftime("%H:%M")
+    if not due(con, "scan", SCAN_EVERY):
+        print(f"[{now}] taps only · tailored={tapped}", flush=True)
+        return
+    include_workday = due(con, "workday", WORKDAY_EVERY)
     matches, errors, total = scan(include_workday)
     for match in matches[:MAX_ALERTS]:
         send_message(format_alert(match), remember_alert(con, match))
     if len(matches) > MAX_ALERTS:
         send_telegram(f"…and {len(matches) - MAX_ALERTS} more new matches.")
-    now = datetime.now(TIMEZONE).strftime("%H:%M")
     print(f"[{now}] checked {total} jobs · {len(matches)} matches · "
           f"{len(errors)} errors · workday={include_workday} · "
           f"tailored={tapped}", flush=True)
@@ -34,15 +53,12 @@ def run_once(cycle):
 
 if __name__ == "__main__":
     if "--once" in sys.argv:
-        minute = datetime.now(TIMEZONE).minute
-        run_once(0 if minute % 30 < 6 else 1)
+        run_once()
     else:
-        send_telegram("👀 ResumeFit watcher started. Checking every 5 minutes.")
-        cycle = 0
+        send_telegram("👀 ResumeFit watcher started. Checking every minute.")
         while True:
             try:
-                run_once(cycle)
+                run_once()
             except Exception as error:
-                print(f"Scan failed: {error}", flush=True)
-            cycle += 1
+                print(f"Run failed: {error}", flush=True)
             time.sleep(INTERVAL_SECONDS)
