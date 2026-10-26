@@ -123,20 +123,16 @@
 \section{Projects}
     \resumeSubHeadingListStart
       \resumeProjectHeading
-          {\textbf{Pneumonia Detection from Chest X-Rays} $|$ \emph{Python, TensorFlow, Keras, OpenCV, Flask}}{\href{https://github.com/siri780/Pneumonia-Detection-from-Chest-X-Rays-Using-CNN}{\underline{GitHub}}}
+          {\textbf{A/B Test Analysis of a 14M-User Ad Experiment} $|$ \emph{Python, SQL (DuckDB), statsmodels}}{\href{https://github.com/siri780/ab-test-criteo-uplift}{\underline{GitHub}}}
           \resumeItemListStart
-            \resumeItem{Trained a CNN on 5,863 chest X-ray images to classify pneumonia, achieving 92.07\% accuracy and 91.41\% precision on the test set, evaluated with a confusion matrix.}
-            \resumeItem{Deployed the model in a Flask web app that returns a prediction and confidence score for an uploaded X-ray in under 3 seconds.}
+            \resumeItem{Analyzed a randomized advertising experiment (Criteo, 14M users) in SQL and Python, validating randomization with a sample ratio mismatch test and estimating a 59\% conversion lift (95\% CI 54--65\%).}
+            \resumeItem{Ran power and minimum detectable effect analysis, cut variance 25\% with cross-fitted CUPED, and diagnosed a covariate imbalance that shifted adjusted estimates, reporting a robust effect range.}
+            \resumeItem{Separated intent-to-treat from the effect on exposed users (instrumental variable), showed a naive comparison overstated impact by a third, and wrote a break-even decision memo.}
           \resumeItemListEnd
       \resumeProjectHeading
           {\textbf{ResumeFit -- Job-Market Analytics \& LLM Agent} $|$ \emph{Python, pandas, SQLite, OpenAI API}}{\href{https://github.com/siri780/resumefit}{\underline{GitHub}}}
           \resumeItemListStart
             \resumeItem{Built a job-market analytics pipeline that ingests postings from Greenhouse, Lever, Ashby and Workday REST APIs, stores them in SQLite, scores skill match against a resume, and surfaces the most in-demand skill gaps.}
-          \resumeItemListEnd
-      \resumeProjectHeading
-          {\textbf{AuthPrivacyChain -- Blockchain Access Control} $|$ \emph{Python, Flask, Solidity, Web3.py, IPFS}}{\href{https://github.com/siri780/Authprivacychain-A-blockchain-based-access-control-framework-with-privacy-protection-in-cloud}{\underline{GitHub}}}
-          \resumeItemListStart
-            \resumeItem{Built a decentralized cloud access control framework using Ethereum smart contracts and IPFS, with a Flask/Web3.py interface supporting 3 user roles, AES encryption, and time/event-based automatic access revocation.}
           \resumeItemListEnd
     \resumeSubHeadingListEnd
 
@@ -145,9 +141,9 @@
  \begin{itemize}[leftmargin=0.15in, label={}]
     \small{\item{
      \textbf{Languages}{: Python, R, SQL, Java} \\
-     \textbf{Statistics \& ML}{: Causal Inference, Survival Analysis, Statistical Modeling, Predictive Modeling, Hypothesis Testing, Regression, Classification, Random Forest, Machine Learning, Feature Engineering, Data Visualization, Deep Learning (CNNs), NLP} \\
+     \textbf{Statistics \& ML}{: A/B Testing, Experimentation, Power Analysis, CUPED, Causal Inference, Survival Analysis, Statistical Modeling, Predictive Modeling, Hypothesis Testing, Regression, Classification, Random Forest, Machine Learning, Feature Engineering, Data Visualization, Deep Learning (CNNs), NLP} \\
      \textbf{Libraries}{: pandas, NumPy, scikit-learn, tidyverse, RMarkdown, Matplotlib, TensorFlow/Keras} \\
-     \textbf{Tools}{: Power BI, Tableau, MySQL, SQLite, Git, Jupyter, Flask, Streamlit, OpenAI API}
+     \textbf{Tools}{: DuckDB, statsmodels, Power BI, Tableau, MySQL, SQLite, Git, Jupyter, Flask, Streamlit, OpenAI API}
     }}
  \end{itemize}
 
