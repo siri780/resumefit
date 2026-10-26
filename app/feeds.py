@@ -84,10 +84,10 @@ def workday(company, careers_url):
             json={"appliedFacets": {}, "limit": 20, "offset": 0,
                   "searchText": query})
         response.raise_for_status()
-        for j in response.json().get("jobPostings", []):
-            path = j["externalPath"]
-            if path in seen:
-                continue
+        for j in response.json().get("jobPostings") or []:
+            path = j.get("externalPath")
+            if not path or not j.get("title") or path in seen:
+                continue  # some boards include half-empty entries
             seen.add(path)
             job = make_job(company, path, j["title"], j.get("locationsText"),
                            f"https://{host}/{site}{path}", j.get("postedOn"), "")

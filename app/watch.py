@@ -61,7 +61,9 @@ def run_once():
         send_telegram(f"…and {len(matches) - MAX_ALERTS} more new matches.")
     print(f"[{now}] checked {total} jobs · {len(matches)} matches · "
           f"{len(errors)} errors · workday={include_workday} · "
-          f"tailored={tapped}", flush=True)
+          f"tailored={tapped} · from email={len(mail_matches)}", flush=True)
+    if errors:
+        print("Errors: " + "; ".join(errors), flush=True)
 
 
 if __name__ == "__main__":

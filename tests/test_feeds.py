@@ -38,3 +38,15 @@ def test_slow_sources_skipped_between_big_scans(monkeypatch):
     monkeypatch.setitem(feeds.READERS, "greenhouse", lambda c, s: called.append(c) or [])
     feeds.fetch_all(include_workday=False)
     assert called == ["X"]
+
+
+def test_workday_skips_half_empty_entries(monkeypatch):
+    class Resp(FakeResponse):
+        pass
+
+    posts = {"jobPostings": [{"title": "Data Scientist", "externalPath": "/job/1",
+                              "locationsText": "Santa Clara, CA"},
+                             {"externalPath": "/job/2"}, {"title": "No path"}]}
+    monkeypatch.setattr(feeds.requests, "post", lambda *a, **k: Resp(posts))
+    jobs = feeds.workday("Intel", "https://intel.wd1.myworkdayjobs.com/External")
+    assert [j["id"] for j in jobs] == ["Intel:/job/1"]
