@@ -36,13 +36,31 @@ jobs:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
 
+      # Keep downloaded LaTeX packages between runs, so a tap doesn't
+      # re-download ~150 MB every time.
+      - name: Restore saved LaTeX packages
+        if: steps.taps.outputs.pending == 'true'
+        uses: actions/cache@v4
+        with:
+          path: ~/aptcache
+          key: latex-debs-v1
+
       - name: Install LaTeX (only when a tap is waiting)
         if: steps.taps.outputs.pending == 'true'
+        timeout-minutes: 6
+        continue-on-error: true
+        env:
+          DEBIAN_FRONTEND: noninteractive
         run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq --no-install-recommends \
+          # Skip the slow manual-page index rebuild that can stall apt.
+          sudo rm -f /var/lib/man-db/auto-update
+          mkdir -p ~/aptcache/partial
+          APT="-o Dir::Cache::Archives=$HOME/aptcache -o Acquire::Retries=3 -o Acquire::http::Timeout=30"
+          sudo apt-get $APT update -qq
+          sudo apt-get $APT install -y -qq --no-install-recommends \
             texlive-latex-base texlive-latex-recommended texlive-latex-extra \
             texlive-fonts-recommended cm-super
+          sudo chown -R "$USER" ~/aptcache
 
       - run: python -m app.watch --once
         env:
