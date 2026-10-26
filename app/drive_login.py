@@ -19,7 +19,14 @@ def client_config():
 
 
 if __name__ == "__main__":
-    flow = Flow.from_client_config(client_config(), scopes=SCOPES,
+    import sys
+    gmail = "--gmail" in sys.argv
+    if gmail:
+        from app.mail_alerts import GMAIL_SCOPES as scopes
+        secret_name = "GMAIL_REFRESH_TOKEN"
+    else:
+        scopes, secret_name = SCOPES, "GOOGLE_REFRESH_TOKEN"
+    flow = Flow.from_client_config(client_config(), scopes=scopes,
                                    redirect_uri=REDIRECT)
     url, _ = flow.authorization_url(access_type="offline", prompt="consent")
     print("\n1) Open this link and allow access:\n")
@@ -29,5 +36,6 @@ if __name__ == "__main__":
     pasted = input("Paste address here: ").strip()
     code = parse_qs(urlparse(pasted).query)["code"][0]
     flow.fetch_token(code=code)
-    print("\n3) Save this as a Codespaces secret named GOOGLE_REFRESH_TOKEN:\n")
+    where = "GitHub Actions secret" if gmail else "Codespaces secret"
+    print(f"\n3) Save this as a {where} named {secret_name}:\n")
     print(flow.credentials.refresh_token)

@@ -131,11 +131,14 @@ def safe_name(text):
     return re.sub(r"[^A-Za-z0-9]+", "_", text).strip("_") or "Company"
 
 
-def edits_message(job, before, after, applied, blocked):
+def edits_message(job, before, after, applied, blocked, keywords=None):
     e = html.escape
     lines = [f"✨ <b>{e(job['company'])}</b> · {e(job['title'])}",
              f"📄 Base: {e(job['base'])} resume",
-             f"📈 ATS {before['percent']}% → {after['percent']}%", ""]
+             f"📈 ATS {before['percent']}% → {after['percent']}%"]
+    if keywords:
+        lines.append(f"🔤 Keyword match {keywords[0]}% → {keywords[1]}%")
+    lines.append("")
     if applied:
         lines.append(f"<b>{len(applied)} edit(s) in the tailored PDF:</b>")
         for n, s in enumerate(applied, 1):
@@ -183,10 +186,15 @@ def tailor_job(job):
     applied = [s for s in suggestions if not s["problems"]]
     blocked = len(suggestions) - len(applied)
 
+    from app.keywords import keyword_match
+    kw_before = keyword_match(text, job["description"], job["company"])
+    kw_after = kw_before
     after = before
     if applied:
         new_tex = apply_edits(tex, {s["id"]: s["new"] for s in applied})
         after = score(latex_to_text(new_tex), job["description"], skills)
+        kw_after = keyword_match(latex_to_text(new_tex), job["description"],
+                                 job["company"])
         tailored_pdf = build_pdf(f"tailored_{company}", tex=new_tex)
         problems = check_pdf(tailored_pdf, latex_to_text(new_tex))
         note = ("✅ 1 page · ATS-readable" if not problems
@@ -195,7 +203,9 @@ def tailor_job(job):
                  f"✨ Tailored for {html.escape(job['company'])} · "
                  f"ATS {after['percent']}% · {html.escape(note)}")
 
-    reply = send_message(edits_message(job, before, after, applied, blocked))
+    reply = send_message(edits_message(
+        job, before, after, applied, blocked,
+        (kw_before["percent"], kw_after["percent"])))
     if not reply.get("ok"):
         send_message(f"✨ {html.escape(job['company'])}: tailored PDF sent "
                      f"(ATS {before['percent']}% → {after['percent']}%). "

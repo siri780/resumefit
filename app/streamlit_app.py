@@ -13,6 +13,7 @@ from app.drive import upload_to_drive
 from app.latex_io import apply_edits, get_bullets
 from app.pdf_check import check_pdf
 from app.rank import knockouts
+from app.keywords import keyword_match
 from app.tailor import load_approved, save_approved, tailor
 from app.ui import CSS, card, chips, hero, score_color, score_ring, require_password
 
@@ -60,7 +61,7 @@ with st.sidebar:
 
     def clear_results():
         for key in ("result", "jd", "suggestions", "tailored", "base",
-                    "base_how", "knockouts"):
+                    "base_how", "knockouts", "keywords"):
             st.session_state.pop(key, None)
 
     pick = st.selectbox("Base resume", [AUTO, *BASES], on_change=clear_results,
@@ -105,6 +106,8 @@ if st.button("Analyze match", type="primary", width="stretch"):
         st.session_state["base"] = chosen_base
         st.session_state["base_how"] = how
         st.session_state["result"] = result
+        st.session_state["keywords"] = keyword_match(
+            latex_to_text(load_base(chosen_base)), jd, company)
         st.session_state["knockouts"] = knockouts(
             {"title": role, "location": "", "description": jd})
         st.session_state["jd"] = jd
@@ -137,6 +140,11 @@ if "result" in st.session_state:
            "match": "job title unclear, picked by best match",
            "manual": "chosen by you"}[st.session_state.get("base_how", "title")]
     st.caption(f"📄 Scored against your **{base}** base resume ({why})")
+    kw = st.session_state.get("keywords")
+    if kw:
+        st.caption(f"🔤 **Keyword match: {kw['percent']}%** of the job's key "
+                   "words appear in your resume. Missing: "
+                   + (", ".join(kw["missing"][:10]) or "none"))
     blockers = st.session_state.get("knockouts") or []
     if blockers:
         st.error("🚫 **Likely screened out, whatever the ATS score:** "
@@ -190,14 +198,22 @@ if "result" in st.session_state:
                     "pdf": pdf,
                     "tex": new_tex,
                     "after": after,
+                    "keywords_after": keyword_match(
+                        latex_to_text(new_tex), st.session_state["jd"],
+                        company),
                     "checks": check_pdf(pdf, latex_to_text(new_tex)),
                 }
 
         tailored = st.session_state.get("tailored")
         if tailored:
             after_pct = tailored["after"]["percent"]
-            st.metric("ATS score after tailoring", f"{after_pct}%",
+            m1, m2 = st.columns(2)
+            m1.metric("ATS score after tailoring", f"{after_pct}%",
                       delta=f"{after_pct - pct} points")
+            kw_before = (st.session_state.get("keywords") or {}).get("percent", 0)
+            kw_after = tailored.get("keywords_after", {}).get("percent", kw_before)
+            m2.metric("Keyword match after tailoring", f"{kw_after}%",
+                      delta=f"{kw_after - kw_before} points")
             pdf = tailored["pdf"]
             if tailored["checks"]:
                 for problem in tailored["checks"]:

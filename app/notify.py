@@ -23,11 +23,19 @@ def format_alert(match):
     """Turn one ranked job into a short phone message."""
     e = html.escape
     missing = ", ".join(match["missing"][:5]) or "none"
+    if match.get("ats") is None:
+        missing = "scored once you paste the job into the web app"
+        score_line = f"🎯 {match['tier']} · ATS: open the job to score it\n"
+    else:
+        score_line = (f"🎯 {match['tier']} · ATS {match['ats']}% · "
+                      f"score {match['score']}\n")
+    via = (f"📧 From your {e(match['company'])} job-alert email\n"
+           if match.get("source") == "email" else "")
     return (
         f"🆕 <b>{e(match['company'])}</b> · {e(match['title'])}\n"
-        f"📍 {e(match['location'])}\n"
-        f"🎯 {match['tier']} · ATS {match['ats']}% · score {match['score']}\n"
-        f"📄 Use: {e(match.get('base', 'Data Scientist'))} resume"
+        f"📍 {e(match['location'] or 'see job')}\n"
+        + via + score_line
+        + f"📄 Use: {e(match.get('base', 'Data Scientist'))} resume"
         f"{' (title unclear, picked by match)' if match.get('base_how') == 'match' else ''}\n"
         f"🛂 {e(match['sponsorship'])}\n"
         f"❌ Missing: {e(missing)}\n"

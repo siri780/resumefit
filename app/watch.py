@@ -4,7 +4,8 @@ from datetime import datetime, timedelta
 
 from app.applications import TIMEZONE
 from app.notify import format_alert, send_telegram
-from app.scan import connect, scan
+from app.scan import connect, scan, scan_email
+from app.summary import bump, maybe_send_summary, record_alert
 from app.taps import process_taps, remember_alert, send_message
 
 INTERVAL_SECONDS = 60
@@ -36,14 +37,26 @@ def run_once():
     except Exception as error:
         tapped = 0
         print(f"Tap handling failed: {error}", flush=True)
+    bump(con, "tailored", tapped)
+    try:
+        maybe_send_summary(con, send_message)
+    except Exception as error:
+        print(f"Summary failed: {error}", flush=True)
     now = datetime.now(TIMEZONE).strftime("%H:%M")
     if not due(con, "scan", SCAN_EVERY):
         print(f"[{now}] taps only · tailored={tapped}", flush=True)
         return
     include_workday = due(con, "workday", WORKDAY_EVERY)
     matches, errors, total = scan(include_workday)
+    mail_matches, mail_errors = scan_email(con)
+    errors += mail_errors
+    matches = mail_matches + matches
     for match in matches[:MAX_ALERTS]:
-        send_message(format_alert(match), remember_alert(con, match))
+        # The Tailor button needs the job description to work with.
+        buttons = (remember_alert(con, match) if match.get("description")
+                   else None)
+        send_message(format_alert(match), buttons)
+        record_alert(con, match)
     if len(matches) > MAX_ALERTS:
         send_telegram(f"…and {len(matches) - MAX_ALERTS} more new matches.")
     print(f"[{now}] checked {total} jobs · {len(matches)} matches · "
