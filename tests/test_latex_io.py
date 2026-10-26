@@ -8,9 +8,9 @@ def test_read_braced_handles_nested_braces():
     assert end == len(text)
 
 
-def test_finds_all_11_bullets():
+def test_finds_all_12_bullets():
     tex = RESUME.read_text(encoding="utf-8")
-    assert len(get_bullets(tex)) == 11
+    assert len(get_bullets(tex)) == 12
 
 
 def test_positions_point_to_the_bullet_text():
@@ -27,9 +27,9 @@ def test_replace_bullet_changes_only_that_bullet():
     new_bullets = get_bullets(new_tex)
 
     assert new_bullets[6]["text"] == "NEW TEXT"
-    assert len(new_bullets) == 11
+    assert len(new_bullets) == 12
 
-    for i in range(11):
+    for i in range(12):
         if i != 6:
             assert new_bullets[i]["text"] == bullets[i]["text"]
 
@@ -42,4 +42,4 @@ def test_apply_edits_replaces_several_bullets():
 
     assert bullets[2]["text"] == "FIRST"
     assert bullets[8]["text"] == "SECOND"
-    assert len(bullets) == 11
+    assert len(bullets) == 12

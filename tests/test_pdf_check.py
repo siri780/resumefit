@@ -1,13 +1,16 @@
+import pytest
+
 from app.ats import latex_to_text
+from app.bases import BASES, load_base
 from app.build_pdf import build_pdf
-from app.latex_io import RESUME
 from app.pdf_check import check_pdf
 
 
-def test_base_resume_pdf_passes_all_checks():
-    pdf = build_pdf("test_resume")
-    source = latex_to_text(RESUME.read_text(encoding="utf-8"))
-    assert check_pdf(pdf, source) == []
+@pytest.mark.parametrize("name", list(BASES))
+def test_each_base_resume_pdf_passes_all_checks(name):
+    tex = load_base(name)
+    pdf = build_pdf("test_" + name.replace(" ", "_"), tex=tex)
+    assert check_pdf(pdf, latex_to_text(tex)) == []
 
 
 def test_flags_word_missing_from_pdf():

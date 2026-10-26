@@ -8,7 +8,6 @@ from app.bases import DEFAULT, guess_base, pick_base
 from app.mail_alerts import add_description, fetch_alert_jobs
 from app.feeds import fetch_all, job_description
 from app.rank import assess, is_relevant, knockouts, tier
-from app.tailor import load_approved
 
 DB = ROOT / "data" / "jobs.db"
 

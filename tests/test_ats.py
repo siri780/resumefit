@@ -28,7 +28,7 @@ def test_score_perfect_match():
 
 
 def test_leadership_found_in_resume():
-    resume_path = ROOT / "data" / "resume.tex"
+    resume_path = ROOT / "data" / "resume_ds.tex"
     resume_tex = resume_path.read_text(encoding="utf-8")
     resume_text = latex_to_text(resume_tex)
 

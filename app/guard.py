@@ -1,6 +1,6 @@
 import re
 
-from app.ats import find_skills, latex_to_text, load_skills
+from app.ats import find_skills, latex_to_text
 
 NUMBER = re.compile(r"\d+(?:[.,]\d+)*")
 

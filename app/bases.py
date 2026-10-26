@@ -47,7 +47,7 @@ def pick_base(title, jd, skills, texts=None):
     A clear title decides the base on its own (how="title").
     An unclear title falls back to the base that best matches the job
     description (how="match")."""
-    texts = texts or {}
+    texts = {} if texts is None else texts
 
     def text_of(name):
         if name not in texts:

@@ -1,7 +1,7 @@
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-RESUME = ROOT / "data" / "resume.tex"
+RESUME = ROOT / "data" / "resume_ds.tex"  # default base resume
 
 
 def read_braced(text, open_pos):
@@ -14,7 +14,7 @@ def read_braced(text, open_pos):
             depth -= 1
             if depth == 0:
                 return text[open_pos + 1:i], i + 1
-    raise ValueError("Unbalanced braces in resume.tex")
+    raise ValueError("Unbalanced braces in the resume")
 
 
 def get_bullets(tex):

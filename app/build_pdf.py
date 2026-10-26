@@ -24,7 +24,7 @@ def build_pdf(out_name="Shirisha_Gajendra_Resume", tex=None):
     OUTPUT.mkdir(exist_ok=True)
 
     if tex is None:
-        tex = (DATA / "resume.tex").read_text(encoding="utf-8")
+        tex = (DATA / "resume_ds.tex").read_text(encoding="utf-8")
 
     tex = fill_placeholders(tex)
     tex_path = OUTPUT / f"{out_name}.tex"
