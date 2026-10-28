@@ -6,7 +6,7 @@ import streamlit as st
 
 from app.applications import TRACKER, already_applied, save_application
 from app.ats import find_skills, latex_to_text, load_skills, score
-from app.backup import backup, restore
+from app.backup import backup, refresh, restore
 from app.bases import BASES, DEFAULT, load_base, pick_base
 from app.build_pdf import OUTPUT, build_pdf
 from app.drive import upload_to_drive
@@ -22,6 +22,7 @@ AUTO = "Auto (job title first)"
 st.set_page_config(page_title="ResumeFit", page_icon="📄", layout="wide")
 require_password()
 restore()
+refresh()
 st.markdown(CSS, unsafe_allow_html=True)
 st.markdown(hero("📄 ResumeFit",
                  "Paste a job description. Get your ATS match, honest AI "

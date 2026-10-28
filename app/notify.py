@@ -29,8 +29,8 @@ def format_alert(match):
     else:
         score_line = (f"🎯 {match['tier']} · ATS {match['ats']}% · "
                       f"score {match['score']}\n")
-    via = (f"📧 From your {e(match['company'])} job-alert email\n"
-           if match.get("source") == "email" else "")
+    via = (f"📧 From your {e(match.get('via') or match['company'])} "
+           "job-alert email\n" if match.get("source") == "email" else "")
     return (
         f"🆕 <b>{e(match['company'])}</b> · {e(match['title'])}\n"
         f"📍 {e(match['location'] or 'see job')}\n"

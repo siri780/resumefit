@@ -1,7 +1,7 @@
 # ResumeFit: Real-Time LLM Resume Tailoring with Hallucination Guardrails
 
 ResumeFit watches **46 company job boards** plus job-alert emails from Google, Microsoft,
-Meta and Apple, alerts me on my phone within minutes of a relevant posting, scores the right
+Meta, Apple and LinkedIn, alerts me on my phone within minutes of a relevant posting, scores the right
 one of my three base resumes against it, and tailors it with an LLM on one tap, while a
 **rule-based guard blocks any invented fact**.
 
@@ -36,7 +36,8 @@ flowchart LR
 | **Job discovery** | Reads official public job APIs (Greenhouse, Lever, Ashby) plus Workday career feeds; remembers seen jobs in SQLite so only new postings alert |
 | **Ranking + knockouts** | Target / Stretch / Reach tiers; skips jobs outside the U.S., with no sponsorship, citizenship/clearance, PhD-only, required certifications (ASA, CPA…), staff/manager level or 8+ years |
 | **Three base resumes** | Data Scientist, ML Engineer and Software Engineer versions; the job title picks one, with a best-match fallback for unclear titles |
-| **Email alerts** | Reads big-company job-alert emails (Gmail, read-only) and sends their jobs through the same pipeline |
+| **Email alerts** | Reads job-alert emails from big companies and LinkedIn (Gmail, read-only) and sends their jobs through the same pipeline, skipping duplicates |
+| **Application log** | Logs "thank you for applying" and LinkedIn Easy Apply confirmations in the tracker, and marks rejections |
 | **One-tap tailoring** | A Telegram button tailors the matching base resume and sends both PDFs plus a before/after edit list |
 | **Daily summary** | Evening Telegram digest: alerts, tailored resumes and the day's best matches |
 | **ATS scoring** | 77-skill dictionary with aliases and whole-word regex matching (e.g. "ML" ≠ "HTML", "R" ≠ "R&D"), plus a keyword-match score for the job's own wording |
@@ -54,7 +55,7 @@ pdflatex · GitHub Actions · Google Drive + Gmail APIs (OAuth) · Telegram Bot 
 - Phone and email are **never in the repo**: `{{PHONE}}` placeholders are filled at build time from secrets
 - All keys live in Codespaces, GitHub Actions or Streamlit encrypted secrets
 - Saved applications go to a **private** repo; the Drive integration can only see files it created
-- Gmail access is **read-only** and limited to career-site alert emails
+- Gmail access is **read-only** and limited to job-alert and application emails
 - The web app is password-protected (`hmac.compare_digest`)
 
 ## Run it yourself

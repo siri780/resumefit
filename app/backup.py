@@ -1,5 +1,6 @@
 import os
 import subprocess
+import time
 
 from app.applications import APPS_DIR
 
@@ -26,6 +27,23 @@ def restore():
     git("remote", "set-url", "origin", f"https://github.com/{REPO}.git")
 
 
+_last_pull = 0.0
+
+
+def refresh(every_seconds=300):
+    """Pull the latest tracker (e.g. rows logged from email by the watcher).
+
+    The web app reruns on every click, so pull at most every 5 minutes."""
+    global _last_pull
+    token = os.getenv("APPS_REPO_TOKEN")
+    if not token or not (APPS_DIR / ".git").exists():
+        return
+    if time.time() - _last_pull < every_seconds:
+        return
+    _last_pull = time.time()
+    git("pull", "-q", "--rebase", "--autostash", repo_url(token), "main")
+
+
 def backup(message):
     """Commit and push the applications folder to the private repo.
 
@@ -43,6 +61,7 @@ def backup(message):
     git("add", "-A")
     git("commit", "-m", message)
 
+    git("pull", "-q", "--rebase", "--autostash", repo_url(token), "main")
     push = git("push", repo_url(token), "main")
     if push.returncode != 0:
         error = push.stderr.replace(token, "***").strip()

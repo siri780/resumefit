@@ -1,9 +1,9 @@
-"""Turn job-alert emails from big companies into ResumeFit alerts.
+"""Turn job-alert emails into ResumeFit alerts.
 
 Google, Microsoft, Meta and Apple don't offer a job feed we can read, but
-they email you job alerts. This reads those emails (read-only), pulls out
-each job, and sends it through the same filters, scoring and Telegram
-alerts as every other job.
+they email you job alerts, and so does LinkedIn. This reads those emails
+(read-only), pulls out each job, and sends it through the same filters,
+scoring and Telegram alerts as every other job.
 """
 import base64
 import html
@@ -24,6 +24,15 @@ QUERY = ("newer_than:2d (from:recruiting.facebook.com OR from:metacareers.com "
          "OR from:careers.microsoft.com OR from:microsoft.com "
          "OR from:careers.google.com OR from:google.com OR from:apple.com) "
          "-from:accounts.google.com -from:noreply-accounts@google.com")
+
+LINKEDIN_QUERY = "newer_than:2d from:jobalerts-noreply@linkedin.com"
+# Staffing/training firms that post look-alike jobs on LinkedIn.
+LINKEDIN_SKIP = {"synergisticit"}
+LINKEDIN_BADGES = re.compile(
+    r"^(?:top applicant|apply with resume.*|easy apply|promoted|actively recruiting|"
+    r"this company is actively hiring|be an early applicant|\d+ (?:school )?alum.*|"
+    r"\d+ connections?.*|your profile matches.*|.*applicants?|new)$", re.I)
+LINKEDIN_VIEW = re.compile(r"View job:\s*https?://(?:www\.)?linkedin\.com/(?:comm/)?jobs/view/(\d+)")
 
 # Job links we recognise, per company.
 JOB_LINKS = [
@@ -54,8 +63,9 @@ def gmail_service():
 
 
 # ---------- Reading the emails ----------
-def html_part(payload):
+def html_part(payload, prefer="text/html"):
     """Find the HTML (or plain text) body inside a Gmail message."""
+    other = "text/plain" if prefer == "text/html" else "text/html"
     found = {}
 
     def walk(part):
@@ -68,7 +78,7 @@ def html_part(payload):
             walk(child)
 
     walk(payload)
-    return found.get("text/html") or found.get("text/plain", "")
+    return found.get(prefer) or found.get(other, "")
 
 
 class LinkReader(HTMLParser):
@@ -136,17 +146,54 @@ def jobs_in_email(body, received=""):
     return jobs
 
 
+def linkedin_jobs_in_email(text, received=""):
+    """Every job in one LinkedIn job-alert email (plain-text version).
+
+    Each job is a block: title, company, location, a few badges, then
+    "View job: https://www.linkedin.com/comm/jobs/view/<id>/...".
+    """
+    jobs, seen = [], set()
+    lines = []
+    for raw in (text or "").splitlines():
+        line = raw.strip()
+        m = LINKEDIN_VIEW.search(line)
+        if m:
+            info = [x for x in lines if not LINKEDIN_BADGES.match(x)
+                    and not x.lower().startswith("your job alert for")]
+            job_id = m.group(1)
+            if len(info) >= 2 and job_id not in seen:
+                seen.add(job_id)
+                company = info[1]
+                if company.lower().replace(" ", "") not in LINKEDIN_SKIP:
+                    jobs.append({
+                        "id": f"LinkedIn:{job_id}", "company": company,
+                        "title": info[0],
+                        "location": info[2] if len(info) > 2 else "",
+                        "url": f"https://www.linkedin.com/jobs/view/{job_id}/",
+                        "posted": received, "description": "",
+                        "source": "email", "via": "LinkedIn"})
+            lines = []
+        elif line.startswith("---"):
+            lines = []
+        elif line:
+            lines.append(line)
+    return jobs
+
+
 def fetch_alert_jobs(service=None, max_emails=30):
     """Jobs from the job-alert emails of the last 2 days."""
     service = service or gmail_service()
-    listing = service.users().messages().list(
-        userId="me", q=QUERY, maxResults=max_emails).execute()
     jobs = []
-    for ref in listing.get("messages", []):
-        msg = service.users().messages().get(
-            userId="me", id=ref["id"], format="full").execute()
-        jobs += jobs_in_email(html_part(msg["payload"]),
-                              msg.get("internalDate", ""))
+    for query, reader, prefer in ((QUERY, jobs_in_email, "text/html"),
+                                  (LINKEDIN_QUERY, linkedin_jobs_in_email,
+                                   "text/plain")):
+        listing = service.users().messages().list(
+            userId="me", q=query, maxResults=max_emails).execute()
+        for ref in listing.get("messages", []):
+            msg = service.users().messages().get(
+                userId="me", id=ref["id"], format="full").execute()
+            jobs += reader(html_part(msg["payload"], prefer),
+                           msg.get("internalDate", ""))
     return jobs
 
 
@@ -180,8 +227,72 @@ def ld_location(posting):
     return "; ".join(n for n in names if n)
 
 
+LINKEDIN_HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                    "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36",
+                    "Accept-Language": "en-US,en;q=0.9"}
+VOID_TAGS = {"br", "hr", "img", "input", "meta", "link", "wbr", "source"}
+
+
+class _DescriptionReader(HTMLParser):
+    """Text inside LinkedIn's job-description box."""
+
+    def __init__(self):
+        super().__init__()
+        self.depth, self.parts = 0, []
+
+    def handle_starttag(self, tag, attrs):
+        cls = dict(attrs).get("class") or ""
+        if tag in VOID_TAGS:
+            if self.depth:
+                self.parts.append(" ")
+            return
+        if self.depth:
+            self.depth += 1
+        elif tag == "div" and ("show-more-less-html__markup" in cls
+                               or "description__text" in cls):
+            self.depth = 1
+
+    def handle_endtag(self, tag):
+        if self.depth:
+            self.depth -= 1
+
+    def handle_startendtag(self, tag, attrs):
+        pass
+
+    def handle_data(self, data):
+        if self.depth:
+            self.parts.append(data)
+
+
+def linkedin_description(job):
+    """Fill in a LinkedIn job's description from LinkedIn's public job page."""
+    job_id = job["id"].split(":", 1)[1]
+    for url in (f"https://www.linkedin.com/jobs-guest/jobs/api/jobPosting/{job_id}",
+                f"https://www.linkedin.com/jobs/view/{job_id}/"):
+        try:
+            response = requests.get(url, headers=LINKEDIN_HEADERS, timeout=TIMEOUT)
+        except requests.RequestException:
+            continue
+        if not response.ok:
+            continue
+        posting = job_posting_ld(response.text)
+        if posting and isinstance(posting.get("description"), str):
+            job["description"] = clean(posting["description"])
+            job["location"] = ld_location(posting) or job["location"]
+            return job
+        reader = _DescriptionReader()
+        reader.feed(response.text)
+        text = clean(" ".join(reader.parts))
+        if len(text) > 200:
+            job["description"] = text
+            return job
+    return job
+
+
 def add_description(job):
     """Fill in the description (and location) from the job page if we can."""
+    if job.get("via") == "LinkedIn":
+        return linkedin_description(job)
     try:
         response = requests.get(job["url"], headers=HEADERS, timeout=TIMEOUT)
         if not response.ok:
@@ -195,3 +306,14 @@ def add_description(job):
         job["description"] = clean(" ".join(p for p in parts if isinstance(p, str)))
         job["location"] = ld_location(posting) or job["location"]
     return job
+
+
+if __name__ == "__main__":
+    # Quick check from your codespace: python -m app.mail_alerts <linkedin job id>
+    import sys
+
+    if len(sys.argv) > 1:
+        test = linkedin_description({"id": f"LinkedIn:{sys.argv[1]}",
+                                     "location": "", "description": ""})
+        print(f"Description: {len(test['description'])} characters")
+        print(test["description"][:400])

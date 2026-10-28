@@ -76,3 +76,79 @@ def test_scan_email_filters_and_alerts(monkeypatch, tmp_path):
 def test_scan_email_off_without_token(monkeypatch, tmp_path):
     monkeypatch.delenv("GMAIL_REFRESH_TOKEN", raising=False)
     assert scan.scan_email(scan.connect(tmp_path / "t.db")) == ([], [])
+
+
+# ---------- LinkedIn job-alert emails (real format, links shortened) ----------
+LINKEDIN_EMAIL = """Your job alert for Data Scientist, Machine Learning Engineer, Software Engineer and Data Analyst, on-site or hybrid in New York City Metropolitan Area
+Machine Learning Engineer
+Kargo
+New York, NY
+Top applicant
+View job: https://www.linkedin.com/comm/jobs/view/4483753691/?trackingId=gt9U%3D%3D&refId=W62
+
+---------------------------------------------------------
+
+Data Scientist
+MITRE
+Bedford, MA
+
+This company is actively hiring
+View job: https://www.linkedin.com/comm/jobs/view/4483774532/?trackingId=mV
+
+---------------------------------------------------------
+
+Junior Software Engineer/Data scientist
+SynergisticIT
+New York, NY
+Top applicant
+Apply with resume & profile
+View job: https://www.linkedin.com/comm/jobs/view/4482904664/
+
+---------------------------------------------------------
+
+Software Engineer, New Grad (2027)
+edkey
+New York, NY
+Top applicant
+View job: https://www.linkedin.com/comm/jobs/view/4483258398/?x=1
+
+---------------------------------------------------------
+
+See all jobs on LinkedIn: https://www.linkedin.com/comm/jobs/search-results/
+Manage your job alerts: https://www.linkedin.com/comm/jobs/alerts
+"""
+
+
+def test_linkedin_alert_email():
+    from app.mail_alerts import linkedin_jobs_in_email
+    jobs = linkedin_jobs_in_email(LINKEDIN_EMAIL, "1793108467000")
+    got = [(j["company"], j["title"], j["location"]) for j in jobs]
+    assert got == [("Kargo", "Machine Learning Engineer", "New York, NY"),
+                   ("MITRE", "Data Scientist", "Bedford, MA"),
+                   ("edkey", "Software Engineer, New Grad (2027)", "New York, NY")]
+    assert jobs[0]["id"] == "LinkedIn:4483753691"
+    assert jobs[0]["url"] == "https://www.linkedin.com/jobs/view/4483753691/"
+    assert all(j["via"] == "LinkedIn" and j["source"] == "email" for j in jobs)
+
+
+def test_linkedin_description_box():
+    from app import mail_alerts
+
+    page = ('<html><div class="show-more-less-html__markup relative">'
+            '<p>We use <strong>Python</strong> and SQL<br>to build models.</p>'
+            + "<p>Experiment design and A/B testing at scale.</p>" * 6 +
+            '</div><div class="other">ignore me</div></html>')
+
+    class R:
+        ok, text = True, page
+
+    old = mail_alerts.requests.get
+    mail_alerts.requests.get = lambda *a, **k: R()
+    try:
+        job = mail_alerts.add_description(
+            {"id": "LinkedIn:1", "via": "LinkedIn", "location": "NY",
+             "description": "", "url": ""})
+    finally:
+        mail_alerts.requests.get = old
+    assert "Python and SQL to build models" in job["description"]
+    assert "ignore me" not in job["description"]

@@ -53,7 +53,9 @@ def summary_text(con, day=None):
     lines = ["📊 <b>ResumeFit · today</b>",
              f"🆕 Job alerts sent: {counts.get('alerts', 0)}",
              f"✨ Resumes tailored: {counts.get('tailored', 0)}",
-             f"🎯 Daily goal: {DAILY_GOAL} applications (≈700 a month)"]
+             f"📬 Applications logged: {counts.get('applied', 0)} / {DAILY_GOAL} "
+             "daily goal (≈700 a month)",
+             f"❌ Rejections: {counts.get('rejected', 0)}"]
     if best:
         lines.append("\n<b>Today's best matches</b> (apply if you haven't):")
         for company, title, url in best:

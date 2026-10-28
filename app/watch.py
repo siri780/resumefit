@@ -6,6 +6,7 @@ from app.applications import TIMEZONE
 from app.notify import format_alert, send_telegram
 from app.scan import connect, scan, scan_email
 from app.summary import bump, maybe_send_summary, record_alert
+from app.app_emails import sync_applications, sync_message
 from app.taps import process_taps, remember_alert, send_message
 
 INTERVAL_SECONDS = 60
@@ -57,6 +58,16 @@ def run_once():
                    else None)
         send_message(format_alert(match), buttons)
         record_alert(con, match)
+    try:
+        synced = sync_applications(con)
+    except Exception as error:
+        synced = None
+        errors.append(f"Application emails: {type(error).__name__}")
+    if synced and (synced[0] or synced[1]):
+        added, rejected, added_today = synced
+        send_message(sync_message(added, rejected))
+        bump(con, "applied", added_today)
+        bump(con, "rejected", len(rejected))
     if len(matches) > MAX_ALERTS:
         send_telegram(f"…and {len(matches) - MAX_ALERTS} more new matches.")
     print(f"[{now}] checked {total} jobs · {len(matches)} matches · "

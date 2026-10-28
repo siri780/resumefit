@@ -62,6 +62,21 @@ def scan(include_workday=True):
     return sorted(matches, key=lambda m: m["score"], reverse=True), errors, len(jobs)
 
 
+def already_alerted(con, job, days=7):
+    """True if the same company + title was alerted recently (for example,
+    LinkedIn emailing a job ResumeFit already found on the company's site)."""
+    from datetime import timedelta
+
+    from app.summary import setup as summary_setup
+    summary_setup(con)
+    since = (datetime.now(TIMEZONE) - timedelta(days=days)).date().isoformat()
+    row = con.execute("SELECT 1 FROM day_alerts WHERE day >= ? AND "
+                      "lower(company) = lower(?) AND lower(title) = lower(?)",
+                      (since, job["company"].strip(), job["title"].strip())
+                      ).fetchone()
+    return row is not None
+
+
 def scan_email(con):
     """New jobs from big-company job-alert emails. Returns (matches, errors)."""
     if not os.getenv("GMAIL_REFRESH_TOKEN"):
@@ -71,6 +86,7 @@ def scan_email(con):
     except Exception as error:
         return [], [f"Gmail: {type(error).__name__}"]
     new = remember(con, jobs, seed_new_companies=False)
+    new = [j for j in new if not already_alerted(con, j)]
     skills = load_skills()
     texts = {}
     matches = []
