@@ -75,6 +75,21 @@ def run_once():
           f"tailored={tapped} · from email={len(mail_matches)}", flush=True)
     if errors:
         print("Errors: " + "; ".join(errors), flush=True)
+    warn_if_gmail_disconnected(con, errors)
+
+
+GMAIL_WARNING = ("⚠️ <b>Gmail is disconnected</b>, so job-alert emails (Meta, "
+                 "LinkedIn) and application tracking are paused.\n"
+                 "Fix: in the resumefit codespace run "
+                 "<code>python -m app.drive_login --gmail</code>, then update the "
+                 "GMAIL_REFRESH_TOKEN secret on GitHub.")
+
+
+def warn_if_gmail_disconnected(con, errors):
+    """Tell you once a day if Gmail stopped working (expired sign-in)."""
+    if any("RefreshError" in e for e in errors):
+        if due(con, "gmail_warning", timedelta(hours=24)):
+            send_message(GMAIL_WARNING)
 
 
 if __name__ == "__main__":

@@ -76,4 +76,27 @@ def test_network_error_does_not_crash(monkeypatch):
         raise taps.requests.ConnectionError("down")
 
     monkeypatch.setattr(taps.requests, "post", boom)
+    monkeypatch.setattr(taps.time, "sleep", lambda s: None)
     assert taps.telegram("getUpdates")["ok"] is False
+
+
+def test_dropped_connection_is_retried_with_whole_file(monkeypatch, tmp_path):
+    import io
+    monkeypatch.setenv("TELEGRAM_BOT_TOKEN", "x")
+    monkeypatch.setattr(taps.time, "sleep", lambda s: None)
+    calls = []
+
+    class OK:
+        def json(self):
+            return {"ok": True}
+
+    def flaky(url, data=None, files=None, **k):
+        calls.append(files["document"][1].read())
+        if len(calls) == 1:
+            raise taps.requests.ConnectionError("reset by peer")
+        return OK()
+
+    monkeypatch.setattr(taps.requests, "post", flaky)
+    f = io.BytesIO(b"%PDF-1.5 resume")
+    assert taps.telegram("sendDocument", files={"document": ("r.pdf", f)})["ok"]
+    assert calls == [b"%PDF-1.5 resume", b"%PDF-1.5 resume"]

@@ -10,6 +10,7 @@ import json
 import os
 import re
 import sys
+import time
 from datetime import datetime, timedelta
 
 import requests
@@ -19,6 +20,7 @@ from app.applications import TIMEZONE
 BUTTON_PREFIX = "t:"
 KEEP_DAYS = 3
 MAX_MESSAGE = 3900
+RETRIES = 3
 
 
 # ---------- Telegram ----------
@@ -28,14 +30,23 @@ def telegram(method, files=None, **params):
     if not token:
         return {"ok": False, "description": "Telegram is not set up"}
     url = f"https://api.telegram.org/bot{token}/{method}"
-    try:
-        if files:
-            response = requests.post(url, data=params, files=files, timeout=60)
-        else:
-            response = requests.post(url, json=params, timeout=30)
-        reply = response.json()
-    except (requests.RequestException, ValueError) as error:
-        reply = {"ok": False, "description": f"network error: {error}"}
+    for attempt in range(RETRIES):
+        if attempt:
+            time.sleep(3 * attempt)          # brief pause, then try again
+        for _, value in (files or {}).items():
+            handle = value[1] if isinstance(value, tuple) else value
+            if hasattr(handle, "seek"):
+                handle.seek(0)               # resend the whole file
+        try:
+            if files:
+                response = requests.post(url, data=params, files=files, timeout=60)
+            else:
+                response = requests.post(url, json=params, timeout=30)
+            reply = response.json()
+        except (requests.RequestException, ValueError) as error:
+            reply = {"ok": False, "description": f"network error: {error}"}
+            continue                         # connection dropped: retry
+        break                                # Telegram answered (ok or not)
     if not reply.get("ok"):
         print(f"Telegram {method} failed: {reply.get('description')}",
               flush=True)

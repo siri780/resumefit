@@ -10,3 +10,15 @@ def test_due_only_after_interval(tmp_path):
     assert due(con, "scan", every) is True
     assert due(con, "scan", every) is False
     assert due(con, "scan", timedelta(0)) is True
+
+
+def test_gmail_warning_once_a_day(tmp_path, monkeypatch):
+    from app import watch
+    sent = []
+    monkeypatch.setattr(watch, "send_message", lambda text, *a: sent.append(text))
+    con = connect(tmp_path / "t.db")
+    watch.warn_if_gmail_disconnected(con, ["Palantir: ReadTimeout"])
+    assert sent == []
+    watch.warn_if_gmail_disconnected(con, ["Gmail: RefreshError"])
+    watch.warn_if_gmail_disconnected(con, ["Gmail: RefreshError"])
+    assert len(sent) == 1 and "Gmail is disconnected" in sent[0]
