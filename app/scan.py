@@ -77,6 +77,16 @@ def already_alerted(con, job, days=7):
     return row is not None
 
 
+def gmail_detail(error):
+    """Why Gmail sign-in failed, e.g. "invalid_grant" (expired or revoked sign-in)
+    or "invalid_client" (client ID/secret don't match the sign-in)."""
+    if type(error).__name__ != "RefreshError":
+        return ""
+    reason = str(error.args[0] if error.args else error)[:60]
+    client = os.getenv("GOOGLE_CLIENT_ID", "")[:12]
+    return f" ({reason}; client {client}…)"
+
+
 def scan_email(con):
     """New jobs from big-company job-alert emails. Returns (matches, errors)."""
     if not os.getenv("GMAIL_REFRESH_TOKEN"):
@@ -84,7 +94,7 @@ def scan_email(con):
     try:
         jobs = fetch_alert_jobs()
     except Exception as error:
-        return [], [f"Gmail: {type(error).__name__}"]
+        return [], [f"Gmail: {type(error).__name__}{gmail_detail(error)}"]
     new = remember(con, jobs, seed_new_companies=False)
     new = [j for j in new if not already_alerted(con, j)]
     skills = load_skills()

@@ -27,3 +27,15 @@ def test_already_alerted_skips_recent_duplicates():
     assert already_alerted(con, {"company": "kargo ",
                                  "title": "Machine Learning Engineer"})
     assert not already_alerted(con, {"company": "Kargo", "title": "Data Scientist"})
+
+
+def test_gmail_error_detail(monkeypatch):
+    from app.scan import gmail_detail
+    monkeypatch.setenv("GOOGLE_CLIENT_ID", "67995411869-abcdef.apps")
+
+    class RefreshError(Exception):
+        pass
+
+    detail = gmail_detail(RefreshError("invalid_grant: Bad Request", {"x": 1}))
+    assert detail == " (invalid_grant: Bad Request; client 67995411869-…)"
+    assert gmail_detail(ValueError("x")) == ""
