@@ -129,6 +129,12 @@
             \resumeItem{Deployed the system as a password-protected Streamlit app, with a scheduled GitHub Actions (CI/CD) pipeline that ingests new roles from 4 job-board APIs every 5 minutes and sends real-time alerts.}
           \resumeItemListEnd
       \resumeProjectHeading
+          {\textbf{ReviewGuard -- Explainable Fake-Review Detection} $|$ \emph{PySpark, Spark MLlib, GraphFrames, SHAP}}{\href{https://github.com/siri780/reviewguard}{\underline{GitHub}}}
+          \resumeItemListStart
+            \resumeItem{Built a PySpark pipeline on YelpChi (46K reviews) and added reviewer graph features (degree, PageRank) with GraphFrames, raising AUC from 0.77 to 0.85 and doubling fraud recall over a logistic regression baseline.}
+            \resumeItem{Flagged 548 suspected review campaigns via connected components and explained predictions with SHAP.}
+          \resumeItemListEnd
+      \resumeProjectHeading
           {\textbf{Pneumonia Detection from Chest X-Rays} $|$ \emph{Python, TensorFlow, Keras, OpenCV, Flask}}{\href{https://github.com/siri780/Pneumonia-Detection-from-Chest-X-Rays-Using-CNN}{\underline{GitHub}}}
           \resumeItemListStart
             \resumeItem{Trained a CNN on 5,863 chest X-ray images to classify pneumonia, achieving 92.07\% accuracy and 91.41\% precision on the test set, evaluated with a confusion matrix.}
@@ -140,20 +146,14 @@
 \section{Skills}
  \begin{itemize}[leftmargin=0.15in, label={}]
     \small{\item{
-     \textbf{Languages}{: Python, SQL, R, Java} \\
-     \textbf{ML \& AI}{: Machine Learning, Deep Learning (CNNs), LLMs, NLP, Structured Outputs, Model Evaluation, Feature Engineering, Classification, Regression, Random Forest, Statistical Modeling, Causal Inference} \\
-     \textbf{Libraries}{: TensorFlow/Keras, scikit-learn, OpenCV, pandas, NumPy, Pydantic, Matplotlib} \\
-     \textbf{Tools}{: OpenAI API, Flask, Streamlit, GitHub Actions, Git, SQLite, MySQL, pytest, Jupyter}
+     \textbf{Languages \& CS}{: Python, SQL, R, Java, C, C++, Data Structures \& Algorithms} \\
+     \textbf{ML \& AI}{: Machine Learning, Deep Learning (CNNs), LLMs, NLP, Structured Outputs, Model Evaluation, Explainable AI (SHAP), Graph Analytics, Fraud Detection, Feature Engineering, Classification, Regression, Random Forest, Statistical Modeling, Causal Inference} \\
+     \textbf{Libraries}{: TensorFlow/Keras, scikit-learn, PySpark, Spark MLlib, GraphFrames, OpenCV, pandas, NumPy, Pydantic, Matplotlib} \\
+     \textbf{Tools}{: Distributed Computing (Spark, MPI), OpenAI API, Flask, Streamlit, GitHub Actions, Git, SQLite, MySQL, pytest, Jupyter} \\
+     \textbf{Leadership}{: Vice President, Robotics Club (2023--2025), organized AI/ML hackathons and mentored 50+ students}
     }}
  \end{itemize}
 
-%----------ACHIEVEMENTS----------
-\section{Certifications \& Leadership}
- \begin{itemize}[leftmargin=0.15in, label={}]
-    \small{\item{
-     \textbf{Certification}{: Machine Learning Specialization -- Andrew Ng, DeepLearning.AI (Completed)} \\
-     \textbf{Leadership}{: Vice President, Robotics Club (2023--2025) -- organized AI/ML hackathons and mentored 50+ students; Coordinator, IEEE INOCON 2024; Winner, MAGNOVITE Fest, Christ University (Feb 2024)}
-    }}
- \end{itemize}
+
 
 \end{document}

@@ -37,7 +37,7 @@ ETL,etl|elt|data pipeline|data pipelines,engineering,no
 Data Warehousing,data warehouse|data warehousing|snowflake|redshift|bigquery,engineering,no
 Data Modeling,data modeling|data modelling|star schema,engineering,no
 Big Data,big data|large-scale data|large scale data,engineering,no
-Spark,spark|pyspark|apache spark,tools,no
+Spark,spark|pyspark|apache spark|spark mllib,tools,no
 Hadoop,hadoop|hive|mapreduce,tools,no
 Airflow,airflow,tools,no
 pandas,pandas,library,no
@@ -76,3 +76,6 @@ Backend,backend|back-end|back end,engineering,no
 Agile,agile|scrum,engineering,no
 Random Forest,random forest|random forests,ml,no
 OpenCV,opencv,library,no
+Graph Analytics,graph analytics|graph features|graphframes|networkx|pagerank|graph mining|network analysis,ml,no
+Explainable AI,explainable ai|explainability|model interpretability|interpretable|shap|xai,ml,no
+Fraud Detection,fraud detection|anomaly detection|fraud models|fraud modeling,ml,no
