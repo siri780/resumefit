@@ -1,6 +1,8 @@
 import csv
 import html
+import json
 import re
+import time
 from datetime import datetime, timezone
 from urllib.parse import urlparse
 
@@ -100,6 +102,15 @@ def job_description(job):
     """Fetch a Workday job's description only when it's actually needed."""
     if job["description"] or not job.get("detail_api"):
         return job["description"]
+    if job.get("detail_kind") == "microsoft":
+        try:
+            response = requests.get(job["detail_api"], headers=BROWSER,
+                                    timeout=TIMEOUT)
+            data = response.json().get("data") or {} if response.ok else {}
+        except (requests.RequestException, ValueError):
+            data = {}
+        job["description"] = clean(data.get("jobDescription"))
+        return job["description"]
     info = get_json(job["detail_api"]).get("jobPostingInfo", {})
     job["description"] = clean(info.get("jobDescription"))
     places = [info.get("location")] + list(info.get("additionalLocations") or [])
@@ -136,9 +147,113 @@ def amazon(company, slug=""):
     return jobs
 
 
+BROWSER = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+           "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36",
+           "Accept-Language": "en-US,en;q=0.9"}
+GOOGLE_RESULTS = "https://www.google.com/about/careers/applications/jobs/results/"
+GOOGLE_DATA = re.compile(r"AF_initDataCallback\(\{key: 'ds:1', hash: '\d+', "
+                         r"data:(.*?), sideChannel: \{\}\}\);</script>", re.S)
+
+
+def _part(entry, i):
+    """Text from a Google job field shaped like [null, "<html>"]."""
+    try:
+        value = entry[i]
+        return value[1] if isinstance(value, list) and len(value) > 1 else ""
+    except (IndexError, TypeError):
+        return ""
+
+
+def google_jobs_from_page(page, company="Google"):
+    """Jobs embedded in one Google Careers results page."""
+    m = GOOGLE_DATA.search(page)
+    if not m:
+        raise ValueError("Google Careers page layout changed")
+    jobs = []
+    for e in json.loads(m.group(1))[0] or []:
+        places = []
+        for place in (e[9] if len(e) > 9 and isinstance(e[9], list) else []):
+            if isinstance(place, list) and place and isinstance(place[0], str):
+                places.append(place[0])
+        posted = ""
+        if len(e) > 12 and isinstance(e[12], list) and e[12]:
+            posted = datetime.fromtimestamp(e[12][0], timezone.utc).isoformat()
+        description = " ".join(filter(None, [
+            _part(e, 3), "Qualifications:", _part(e, 4), _part(e, 10)]))
+        jobs.append(make_job(company, e[0], e[1], "; ".join(places),
+                             f"{GOOGLE_RESULTS}{e[0]}", posted, description))
+    return jobs
+
+
+def google(company, slug=""):
+    """Google Careers search (U.S., newest first), read from the public page."""
+    jobs, seen = [], set()
+    for query in SEARCHES:
+        for page in (1, 2):
+            response = requests.get(
+                GOOGLE_RESULTS, headers=BROWSER, timeout=TIMEOUT,
+                params={"q": query, "location": "United States",
+                        "sort_by": "date", "page": page})
+            response.raise_for_status()
+            for job in google_jobs_from_page(response.text, company):
+                if job["id"] not in seen:
+                    seen.add(job["id"])
+                    jobs.append(job)
+    return jobs
+
+
+MICROSOFT_API = "https://apply.careers.microsoft.com/api/pcsx/"
+
+
+def _microsoft_get(url, params):
+    """One polite request to Microsoft Careers; waits and retries once if
+    Microsoft says "too many requests". Returns the JSON, or None."""
+    for wait in (0, 20):
+        time.sleep(wait or 1.5)
+        response = requests.get(url, params=params, headers=BROWSER,
+                                timeout=TIMEOUT)
+        if response.status_code != 429:
+            response.raise_for_status()
+            return response.json()
+    print("Microsoft Careers: too many requests, trying again next run",
+          flush=True)
+    return None
+
+
+def microsoft(company, slug=""):
+    """Microsoft Careers search (U.S.). Descriptions are fetched only when needed."""
+    jobs, seen = [], set()
+    for query in SEARCHES:
+        for start in (0, 10):
+            data = _microsoft_get(MICROSOFT_API + "search", {
+                "domain": "microsoft.com", "query": query,
+                "location": "United States", "start": start})
+            if data is None:
+                return jobs                # rate-limited: keep what we have
+            positions = (data.get("data") or {}).get("positions") or []
+            for p in positions:
+                if p["id"] in seen:
+                    continue
+                seen.add(p["id"])
+                posted = (datetime.fromtimestamp(p["postedTs"], timezone.utc).isoformat()
+                          if p.get("postedTs") else "")
+                job = make_job(company, p["id"], p["name"],
+                               "; ".join(p.get("locations") or []),
+                               f"https://apply.careers.microsoft.com/careers/job/{p['id']}",
+                               posted, "")
+                job["detail_api"] = (f"{MICROSOFT_API}position_details?position_id="
+                                     f"{p['id']}&domain=microsoft.com&hl=en")
+                job["detail_kind"] = "microsoft"
+                jobs.append(job)
+            if len(positions) < 10:
+                break
+    return jobs
+
+
 READERS = {"greenhouse": greenhouse, "lever": lever, "ashby": ashby,
-           "workday": workday, "amazon": amazon}
-SLOW_SOURCES = {"workday", "amazon"}  # big boards: checked every ~30 minutes
+           "workday": workday, "amazon": amazon, "google": google,
+           "microsoft": microsoft}
+SLOW_SOURCES = {"workday", "amazon", "google", "microsoft"}  # every ~30 minutes
 
 
 def load_companies():
