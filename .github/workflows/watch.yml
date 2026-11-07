@@ -1,0 +1,83 @@
+name: Job watcher
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+
+# The code lives in a private repo; this public repo only runs it.
+# Output is hidden so the public run logs show nothing about the jobs.
+permissions:
+  contents: read
+
+concurrency:
+  group: job-watcher
+  cancel-in-progress: false
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: siri780/resumefit-core
+          token: ${{ secrets.APPS_REPO_TOKEN }}
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - run: pip install -q -r requirements.txt > /dev/null
+
+      - uses: actions/cache@v4
+        with:
+          path: data/jobs.db
+          key: jobsdb-${{ github.run_id }}
+          restore-keys: jobsdb-
+
+      - name: Check for "Tailor my resume" taps
+        id: taps
+        run: python -m app.taps --check > /dev/null 2>&1
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+
+      # Keep downloaded LaTeX packages between runs, so a tap doesn't
+      # re-download ~150 MB every time.
+      - name: Restore saved LaTeX packages
+        if: steps.taps.outputs.pending == 'true'
+        uses: actions/cache@v4
+        with:
+          path: ~/aptcache
+          key: latex-debs-v1
+
+      - name: Install LaTeX (only when a tap is waiting)
+        if: steps.taps.outputs.pending == 'true'
+        timeout-minutes: 6
+        continue-on-error: true
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          # Skip the slow manual-page index rebuild that can stall apt.
+          sudo rm -f /var/lib/man-db/auto-update
+          mkdir -p ~/aptcache/partial
+          APT="-o Dir::Cache::Archives=$HOME/aptcache -o Acquire::Retries=3 -o Acquire::http::Timeout=30"
+          sudo apt-get $APT update -qq > /dev/null 2>&1
+          sudo apt-get $APT install -y -qq --no-install-recommends \
+            texlive-latex-base texlive-latex-recommended texlive-latex-extra \
+            texlive-fonts-recommended cm-super > /dev/null 2>&1
+          sudo chown -R "$USER" ~/aptcache
+
+      - run: python -m app.watch --once > /dev/null 2>&1
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          PHONE: ${{ secrets.PHONE }}
+          EMAIL: ${{ secrets.EMAIL }}
+          GMAIL_REFRESH_TOKEN: ${{ secrets.GMAIL_REFRESH_TOKEN }}
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          APPS_REPO_TOKEN: ${{ secrets.APPS_REPO_TOKEN }}
